@@ -1,0 +1,22 @@
+{
+  "appId": "com.knockers.app",
+  "appName": "Knockers",
+  "webDir": "dist",
+  "server": {
+    "allowNavigation": [
+      "*.firebase.com",
+      "*.firebaseapp.com",
+      "*.googleapis.com",
+      "*.google.com",
+      "*.firebaseio.com",
+      "*.cloudfunctions.net",
+      "*.stripe.com"
+    ]
+  },
+  "ios": {
+    "allowsLinkPreview": false
+  },
+  "android": {
+    "allowMixedContent": true
+  }
+}

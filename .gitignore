@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+
+# Env and secrets (never commit)
+.env
+.env.local
+.env.staging
+.env.prod
+.env.*.local
+functions/.env
+docs/TEST_ACCOUNTS.md
+
+# Build
+dist/
+functions/lib/
+
+# IDE / OS
+.DS_Store
+*.log

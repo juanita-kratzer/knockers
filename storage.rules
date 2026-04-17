@@ -1,0 +1,104 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // ============================================
+    // HELPER FUNCTIONS
+    // ============================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Check file size (max 10MB)
+    function isValidSize() {
+      return request.resource.size < 10 * 1024 * 1024;
+    }
+    
+    // Check if file is an image
+    function isImage() {
+      return request.resource.contentType.matches('image/.*');
+    }
+
+    // ============================================
+    // ENTERTAINER PHOTOS (Public)
+    // ============================================
+    match /entertainers/{entertainerId}/photos/{fileName} {
+      // Anyone can view entertainer photos
+      allow read: if true;
+      
+      // Only the entertainer can upload/delete their own photos
+      allow write: if isOwner(entertainerId) && isImage() && isValidSize();
+      allow delete: if isOwner(entertainerId);
+    }
+
+    // ============================================
+    // USER PROFILE PHOTOS
+    // ============================================
+    match /users/{userId}/profile/{fileName} {
+      // Authenticated users can view profile photos
+      allow read: if isAuthenticated();
+      
+      // Only the user can upload their own photo
+      allow write: if isOwner(userId) && isImage() && isValidSize();
+      allow delete: if isOwner(userId);
+    }
+
+    // ============================================
+    // ID VERIFICATION DOCUMENTS (Private)
+    // ============================================
+    match /users/{userId}/verification/{fileName} {
+      // Only the user can read their own verification docs
+      allow read: if isOwner(userId);
+      
+      // Only the user can upload (images or PDFs, max 10MB)
+      allow write: if isOwner(userId) && 
+        (request.resource.contentType.matches('image/.*') || 
+         request.resource.contentType == 'application/pdf') &&
+        isValidSize();
+      
+      // No deletion of verification docs
+      allow delete: if false;
+    }
+
+    // ============================================
+    // POLICE CHECK DOCUMENTS (Private)
+    // ============================================
+    match /users/{userId}/police-check/{fileName} {
+      // Only the user can read their own police check
+      allow read: if isOwner(userId);
+      
+      // Only the user can upload
+      allow write: if isOwner(userId) && 
+        (request.resource.contentType.matches('image/.*') || 
+         request.resource.contentType == 'application/pdf') &&
+        isValidSize();
+      
+      allow delete: if false;
+    }
+
+    // ============================================
+    // BOOKING ATTACHMENTS (Private to parties)
+    // ============================================
+    match /bookings/{bookingId}/{fileName} {
+      // This would require checking Firestore - simplified for now
+      // In production, use Cloud Functions to verify access
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && isImage() && isValidSize();
+      allow delete: if false;
+    }
+
+    // ============================================
+    // CATCH-ALL: Deny everything else
+    // ============================================
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
+
+

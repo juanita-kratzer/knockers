@@ -1,0 +1,49 @@
+{
+  "name": "knockers-app",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint .",
+    "dev:staging": "cp .env.staging .env && vite",
+    "build:staging": "cp .env.staging .env && vite build",
+    "deploy:staging": "npm run build:staging && npx firebase-tools@latest deploy --only hosting:staging",
+    "dev:prod": "cp .env.prod .env && vite",
+    "build:prod": "cp .env.prod .env && vite build",
+    "deploy:prod": "npm run build:prod && npx firebase-tools@latest deploy --only hosting:prod",
+    "build:suburbs": "node scripts/buildSuburbsFromShapefile.cjs"
+  },
+  "dependencies": {
+    "@capacitor/app": "^7.0.2",
+    "@capacitor/haptics": "^7.0.2",
+    "@capacitor/ios": "^7.4.4",
+    "@capacitor/keyboard": "^7.0.2",
+    "@capacitor/status-bar": "^7.0.2",
+    "@react-google-maps/api": "^2.20.8",
+    "@stripe/react-stripe-js": "^5.6.0",
+    "@stripe/stripe-js": "^8.7.0",
+    "firebase": "^12.3.0",
+    "lucide-react": "^0.544.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "react-router-dom": "^7.9.3",
+    "styled-components": "^6.1.19"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.4.3",
+    "@capacitor/core": "^7.4.3",
+    "@eslint/js": "^9.36.0",
+    "@types/react": "^19.1.13",
+    "@types/react-dom": "^19.1.9",
+    "@vitejs/plugin-react": "^5.0.3",
+    "eslint": "^9.36.0",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.20",
+    "globals": "^16.4.0",
+    "shapefile": "^0.6.6",
+    "vite": "^7.1.7"
+  }
+}

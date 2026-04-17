@@ -1,0 +1,516 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ============================================
+    // HELPER FUNCTIONS
+    // ============================================
+    
+    // Check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Check if the user owns this document
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Check if user has a specific role (prod: users; dev: users_dev)
+    function hasRole(role) {
+      return isAuthenticated() && (
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == role) ||
+        (exists(/databases/$(database)/documents/users_dev/$(request.auth.uid)) && 
+          get(/databases/$(database)/documents/users_dev/$(request.auth.uid)).data.role == role)
+      );
+    }
+    
+    // Check if user is an entertainer
+    function isEntertainer() {
+      return hasRole('entertainer');
+    }
+    
+    // Check if user is a client
+    function isClient() {
+      return hasRole('client');
+    }
+    
+    // Check if user is an admin
+    function isAdmin() {
+      return hasRole('admin');
+    }
+
+    // Phase 6: verification fee paid (IAP) or waived by admin — required for booking, posting, messaging
+    function hasVerification() {
+      return isAuthenticated() && (
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+          (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.verificationFeePaid == true ||
+           get(/databases/$(database)/documents/users/$(request.auth.uid)).data.verificationFeeWaivedBy != null)) ||
+        (exists(/databases/$(database)/documents/users_dev/$(request.auth.uid)) &&
+          (get(/databases/$(database)/documents/users_dev/$(request.auth.uid)).data.verificationFeePaid == true ||
+           get(/databases/$(database)/documents/users_dev/$(request.auth.uid)).data.verificationFeeWaivedBy != null))
+      );
+    }
+
+    // Phase 4.5 + 6: only admin (or backend) can change strikes, suspension, ban, verification fee fields.
+    // Users may switch their own role between "client" and "entertainer" but cannot escalate to "admin".
+    function userAdminOnlyUnchanged() {
+      let keys = request.resource.data.diff(resource.data).affectedKeys();
+      let safeRole = !keys.hasAny(['role'])
+        || request.resource.data.role in ['client', 'entertainer'];
+      return safeRole && !keys.hasAny(
+        ['strikes', 'isSuspended', 'isBanned', 'verificationFeePaid', 'verifiedAt', 'iapReceipt', 'verificationFeeWaivedBy']
+      );
+    }
+
+    // ============================================
+    // USERS COLLECTION
+    // ============================================
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isOwner(userId);
+      allow update: if (isOwner(userId) && userAdminOnlyUnchanged()) || isAdmin();
+      allow delete: if false;
+    }
+    
+    match /users_dev/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isOwner(userId);
+      allow update: if (isOwner(userId) && userAdminOnlyUnchanged()) || isAdmin();
+      allow delete: if false;
+    }
+
+    // ============================================
+    // USERNAME UNIQUENESS COLLECTION
+    // ============================================
+    match /usernames/{username} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    // ============================================
+    // ENTERTAINERS COLLECTION (Public Profiles)
+    // ============================================
+    // Phase 1: entertainer stripe Connect fields are server-only
+    function entertainerStripeUnchanged() {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(['stripe']);
+    }
+    // Phase 4.5: only admin (or backend) can change balance, strikes, suspension, ban
+    function entertainerAdminOnlyUnchanged() {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(['balanceCents', 'strikes', 'isSuspended', 'isBanned']);
+    }
+
+    match /entertainers/{entertainerId} {
+      allow read: if true;
+      allow create: if isOwner(entertainerId);
+      allow update: if (isOwner(entertainerId) && entertainerStripeUnchanged() && entertainerAdminOnlyUnchanged()) || isAdmin();
+      allow delete: if false;
+      
+      // Subcollections
+      match /services/{serviceId} {
+        allow read: if true;
+        allow write: if isOwner(entertainerId);
+      }
+      
+      match /availability/{dayId} {
+        allow read: if true;
+        allow write: if isOwner(entertainerId);
+      }
+    }
+    
+    // Development entertainers collection (stripe server-only)
+    match /entertainers_dev/{entertainerId} {
+      allow read: if true;
+      allow create: if isOwner(entertainerId);
+      allow update: if (isOwner(entertainerId) && entertainerStripeUnchanged() && entertainerAdminOnlyUnchanged()) || isAdmin();
+      allow delete: if false;
+    }
+
+    // Phase 1 + 4.5: payment/admin fields are server-only. Clients cannot write them.
+    function bookingPaymentKeysUnchanged() {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(
+        ['paymentStatus', 'stripe', 'payout', 'cancellation', 'depositPaidAt', 'paymentId', 'refund', 'isFrozen', 'freezeReason', 'frozenAt', 'frozenBy']
+      );
+    }
+
+    // Phase 4.5: when booking is frozen, only admin can change status
+    function bookingStatusUnchangedWhenFrozen() {
+      return !resource.data.get('isFrozen', false) || request.resource.data.status == resource.data.status;
+    }
+
+    // ============================================
+    // BOOKINGS COLLECTION
+    // ============================================
+    match /bookings/{bookingId} {
+      allow read: if isAuthenticated() && 
+        (resource.data.clientId == request.auth.uid || 
+         resource.data.entertainerId == request.auth.uid ||
+         isAdmin());
+      allow create: if isAuthenticated() &&
+        request.resource.data.clientId == request.auth.uid &&
+        (hasVerification() || isAdmin());
+      allow update: if isAuthenticated() && 
+        (((resource.data.clientId == request.auth.uid || 
+           resource.data.entertainerId == request.auth.uid) &&
+          bookingPaymentKeysUnchanged() &&
+          bookingStatusUnchangedWhenFrozen()) ||
+        isAdmin());
+      allow delete: if false;
+      
+      // Messages subcollection - only booking participants
+      match /messages/{messageId} {
+        allow read: if isAuthenticated() && 
+          (get(/databases/$(database)/documents/bookings/$(bookingId)).data.clientId == request.auth.uid ||
+           get(/databases/$(database)/documents/bookings/$(bookingId)).data.entertainerId == request.auth.uid);
+        
+        allow create: if isAuthenticated() &&
+          request.resource.data.senderId == request.auth.uid &&
+          (hasVerification() || isAdmin()) &&
+          (get(/databases/$(database)/documents/bookings/$(bookingId)).data.clientId == request.auth.uid ||
+           get(/databases/$(database)/documents/bookings/$(bookingId)).data.entertainerId == request.auth.uid);
+        
+        allow update, delete: if false;
+      }
+    }
+    
+    // Development bookings (same server-only payment fields)
+    match /bookings_dev/{bookingId} {
+      allow read: if isAuthenticated() && 
+        (resource.data.clientId == request.auth.uid || 
+         resource.data.entertainerId == request.auth.uid ||
+         isAdmin());
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && 
+        (((resource.data.clientId == request.auth.uid || 
+           resource.data.entertainerId == request.auth.uid) &&
+          bookingPaymentKeysUnchanged() &&
+          bookingStatusUnchangedWhenFrozen()) ||
+        isAdmin());
+      allow delete: if false;
+      
+      match /messages/{messageId} {
+        allow read, write: if isAuthenticated();
+      }
+    }
+
+    // ============================================
+    // RATINGS COLLECTION
+    // ============================================
+    match /ratings/{ratingId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && 
+        request.resource.data.reviewerId == request.auth.uid;
+      allow update: if (isAuthenticated() && 
+        resource.data.revieweeId == request.auth.uid &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isDisputed', 'disputedAt', 'disputeReason'])) ||
+        isAdmin();
+      allow delete: if false;
+    }
+    
+    match /ratings_dev/{ratingId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() || isAdmin();
+      allow delete: if false;
+    }
+
+    // ============================================
+    // USER POSTS (ASAP Requests)
+    // ============================================
+    match /userPosts/{postId} {
+      // Open posts are readable by all authenticated users
+      allow read: if isAuthenticated();
+      
+      // Only the post creator can create (Phase 6: verification required)
+      allow create: if isAuthenticated() &&
+        request.resource.data.userId == request.auth.uid &&
+        (hasVerification() || isAdmin());
+      
+      // Creator can update, entertainers can add applications
+      allow update: if isAuthenticated() && 
+        (resource.data.userId == request.auth.uid || isEntertainer());
+      
+      allow delete: if false;
+    }
+    
+    match /userPosts_dev/{postId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated();
+      allow delete: if false;
+    }
+
+    // ============================================
+    // COMPANIES COLLECTION
+    // ============================================
+    match /companies/{companyId} {
+      // Anyone authenticated can read companies (for code validation)
+      allow read: if isAuthenticated();
+      
+      // Only admins can create/update companies (via backend)
+      allow create, update, delete: if false;
+    }
+    
+    match /companies_dev/{companyId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated(); // More permissive for dev
+    }
+
+    // ============================================
+    // SAFETY ALERTS (Sensitive)
+    // ============================================
+    match /safetyAlerts/{alertId} {
+      allow read: if isAuthenticated() && 
+        (resource.data.entertainerId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && 
+        request.resource.data.entertainerId == request.auth.uid;
+      allow update: if isAdmin();
+      allow delete: if false;
+    }
+    
+    match /safetyAlerts_dev/{alertId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAdmin();
+      allow delete: if false;
+    }
+
+    // ============================================
+    // DISPUTES
+    // ============================================
+    match /disputes/{disputeId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAdmin();
+      allow delete: if false;
+    }
+    
+    match /disputes_dev/{disputeId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAdmin();
+      allow delete: if false;
+    }
+
+    // ============================================
+    // BLOCKED CONTACTS
+    // ============================================
+    match /blockedContacts/{odcId} {
+      // Only the owner can read/write their blocked list
+      allow read, write: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+      
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid;
+    }
+    
+    match /blockedContacts_dev/{docId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // ============================================
+    // FAVORITES
+    // ============================================
+    match /favorites/{favoriteId} {
+      allow read: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+      
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid;
+      
+      allow delete: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+      
+      allow update: if false;
+    }
+    
+    match /favorites_dev/{favoriteId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // ============================================
+    // MESSAGES (Standalone collection if used)
+    // ============================================
+    match /messages/{messageId} {
+      allow read: if isAuthenticated() && 
+        (resource.data.senderId == request.auth.uid || 
+         resource.data.receiverId == request.auth.uid);
+      
+      allow create: if isAuthenticated() && 
+        request.resource.data.senderId == request.auth.uid;
+      
+      allow update, delete: if false;
+    }
+    
+    match /messages_dev/{messageId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // ============================================
+    // PAYMENTS & FINANCES (Read-only from client)
+    // ============================================
+    match /payments/{paymentId} {
+      allow read: if isAuthenticated() && 
+        (resource.data.clientId == request.auth.uid || 
+         resource.data.entertainerId == request.auth.uid ||
+         isAdmin());
+      allow create, update, delete: if false;
+    }
+    
+    match /payments_dev/{paymentId} {
+      allow read: if isAuthenticated();
+      allow write: if false;
+    }
+
+    match /finances/{odcId} {
+      allow read: if isAuthenticated() && 
+        (resource.data.ownerId == request.auth.uid || isAdmin());
+      allow create, delete: if false;
+      allow update: if isAdmin();
+    }
+    
+    match /finances_dev/{docId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // ============================================
+    // LISTINGS (client job posts, entertainers apply)
+    // ============================================
+    match /listings/{listingId} {
+      // Read: owner can read their listings; anyone authenticated can read open listings (browse)
+      allow read: if isAuthenticated() &&
+        (resource.data.clientId == request.auth.uid || resource.data.status == 'open');
+
+      // Only the client (owner) can create a listing (Phase 6: verification required)
+      allow create: if isAuthenticated() &&
+        request.resource.data.clientId == request.auth.uid &&
+        (hasVerification() || isAdmin());
+
+      // Only the client who owns the listing can update (e.g. close, accept)
+      allow update: if isAuthenticated() &&
+        resource.data.clientId == request.auth.uid;
+
+      allow delete: if false;
+    }
+
+    match /listings_dev/{listingId} {
+      allow read: if isAuthenticated() &&
+        (resource.data.clientId == request.auth.uid || resource.data.status == 'open');
+      allow create: if isAuthenticated() &&
+        request.resource.data.clientId == request.auth.uid;
+      allow update: if isAuthenticated() &&
+        resource.data.clientId == request.auth.uid;
+      allow delete: if false;
+    }
+
+    // ============================================
+    // LISTING APPLICATIONS (entertainer applies to client listing)
+    // ============================================
+    match /listingApplications/{applicationId} {
+      // Read: entertainer can read their own applications; client can read applications for their listing
+      allow read: if isAuthenticated() && (
+        resource.data.entertainerId == request.auth.uid ||
+        get(/databases/$(database)/documents/listings/$(resource.data.listingId)).data.clientId == request.auth.uid
+      );
+
+      // Only the entertainer can create an application (for themselves)
+      allow create: if isAuthenticated() &&
+        request.resource.data.entertainerId == request.auth.uid;
+
+      // Client who owns the listing can update (accept/reject); entertainer cannot update
+      allow update: if isAuthenticated() &&
+        get(/databases/$(database)/documents/listings/$(resource.data.listingId)).data.clientId == request.auth.uid;
+
+      allow delete: if false;
+    }
+
+    match /listingApplications_dev/{applicationId} {
+      allow read: if isAuthenticated() && (
+        resource.data.entertainerId == request.auth.uid ||
+        get(/databases/$(database)/documents/listings_dev/$(resource.data.listingId)).data.clientId == request.auth.uid
+      );
+      allow create: if isAuthenticated() &&
+        request.resource.data.entertainerId == request.auth.uid;
+      allow update: if isAuthenticated() &&
+        get(/databases/$(database)/documents/listings_dev/$(resource.data.listingId)).data.clientId == request.auth.uid;
+      allow delete: if false;
+    }
+
+    // ============================================
+    // ADMIN LOGS (audit trail) — Phase 4.5: only backend can create
+    // ============================================
+    match /adminLogs/{logId} {
+      allow read: if isAdmin();
+      allow create, update, delete: if false;
+    }
+    match /adminLogs_dev/{logId} {
+      allow read: if isAdmin();
+      allow create, update, delete: if false;
+    }
+
+    // ============================================
+    // PHASE 5: GROWTH & ACQUISITION
+    // ============================================
+    match /leads/{leadId} {
+      allow read, write: if isAdmin();
+    }
+    match /leads_dev/{leadId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /referrals/{referralId} {
+      allow read: if isAuthenticated() && (resource.data.referrerId == request.auth.uid || resource.data.referredUserId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated();
+      allow update, delete: if isAdmin();
+    }
+    match /referrals_dev/{referralId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update, delete: if isAdmin();
+    }
+
+    match /campaigns/{campaignId} {
+      allow read, write: if isAdmin();
+    }
+    match /campaigns_dev/{campaignId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /promotions/{promoId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    match /promotions_dev/{promoId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    match /testimonials/{testimonialId} {
+      allow read: if resource.data.approved == true || isAdmin();
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAdmin();
+    }
+    match /testimonials_dev/{testimonialId} {
+      allow read: if true;
+      allow create: if isAuthenticated();
+      allow update, delete: if isAdmin();
+    }
+
+    // Phase 6: Fee accounting — backend only writes; admin read
+    match /fees/{feeId} {
+      allow read: if isAdmin();
+      allow create, update, delete: if false;
+    }
+    match /fees_dev/{feeId} {
+      allow read: if isAdmin();
+      allow create, update, delete: if false;
+    }
+
+  }
+}
+
+

@@ -1,0 +1,367 @@
+// src/data/entertainerTypes.js
+// Comprehensive entertainer categories for the signup wizard
+
+export const entertainerCategories = [
+  {
+    name: "Burlesque, Cabaret & Sensual",
+    ageRestricted: true,
+    types: [
+      "Burlesque Performer",
+      "Cabaret Dancer",
+      "Fire Dancer",
+      "Aerial Hoop / Silk Dancer",
+      "Showgirl (PG)",
+      "Showgirl (M-Rated)",
+      "Go-Go Dancer",
+      "Exotic Dancer",
+      "Fetish Performer",
+      "Domme / Dominant",
+      "Roleplay Entertainer",
+      "Bachelor / Bachelorette Entertainer",
+    ],
+    toggles: {
+      "Showgirl (PG)": ["Solo", "Duo", "Group", "Roving", "Stage"],
+      "Showgirl (M-Rated)": ["Solo", "Duo", "Group", "Roving", "Stage"],
+      "Go-Go Dancer": ["Solo", "Duo", "Group", "Podium", "Roving"],
+      "Fire Dancer": ["Indoor Safe", "Outdoor Only", "LED Alternative"],
+      "Aerial Hoop / Silk Dancer": ["Hoop", "Silks", "Trapeze", "Brings Own Rig"],
+    },
+  },
+  {
+    name: "Adult Entertainment",
+    ageRestricted: true,
+    types: [
+      "Stripper",
+      "Topless Waitress",
+      "Lingerie Waitress",
+      "Nude Life Drawing Model",
+    ],
+    toggles: {
+      "Stripper": ["Lapdancer", "Showgirl R", "Showgirl X", "Male", "Female", "Solo", "Duo"],
+      "Topless Waitress": ["Solo", "Duo", "Group"],
+      "Lingerie Waitress": ["Solo", "Duo", "Group"],
+    },
+  },
+  {
+    name: "Circus, Novelty & Visual",
+    types: [
+      "Clown",
+      "Mime",
+      "Stilt Walker",
+      "Juggler",
+      "Fire Spinner",
+      "Fire Breather",
+      "Sword Swallower",
+      "Contortionist",
+      "Acrobat",
+      "Aerialist",
+      "Cyr Wheel Performer",
+      "Living Statue",
+      "LED / Light Performer",
+      "Hula Hoop Performer",
+      "Balloon Artist",
+      "Bubble Artist",
+    ],
+    toggles: {
+      "Clown": ["Kids Friendly", "Adult Comedy", "Roving", "Stage"],
+      "Juggler": ["Balls", "Clubs", "Fire", "LED", "Comedy"],
+      "Fire Spinner": ["Poi", "Staff", "Fans", "Hoop", "Outdoor Only"],
+      "Aerialist": ["Silks", "Hoop", "Trapeze", "Straps", "Brings Own Rig"],
+    },
+  },
+  {
+    name: "Music & Vocal",
+    types: [
+      "Singer (Solo)",
+      "Vocalist",
+      "Backing Singer",
+      "Opera Singer",
+      "Classical Singer",
+      "Jazz Singer",
+      "Pop Singer",
+      "R&B / Soul Singer",
+      "Rock Singer",
+      "Indie Artist",
+      "Folk Singer",
+      "Country Singer",
+      "Choir",
+      "A Cappella Group",
+    ],
+    toggles: {
+      "Singer (Solo)": ["Acoustic", "Backing Track", "With Live Band", "With Piano"],
+      "Jazz Singer": ["Standards", "Contemporary", "With Band", "Solo"],
+      "Pop Singer": ["Covers", "Originals", "Backing Track", "With Live Band"],
+    },
+  },
+  {
+    name: "Bands & Live Music",
+    types: [
+      "Cover Band",
+      "Tribute Band",
+      "Wedding Band",
+      "Party Band",
+      "Rock Band",
+      "Jazz Band",
+      "Blues Band",
+      "Funk Band",
+      "Soul Band",
+      "Indie Band",
+      "Punk Band",
+      "Metal Band",
+      "Acoustic Band",
+      "String Quartet",
+      "Orchestra",
+      "Ensemble",
+    ],
+    toggles: {
+      "Cover Band": ["Acoustic Option", "Full Band", "Takes Requests"],
+      "Wedding Band": ["Ceremony", "Reception", "Both", "DJ Between Sets"],
+      "Jazz Band": ["Trio", "Quartet", "Big Band", "Background", "Feature"],
+    },
+  },
+  {
+    name: "DJs & Electronic",
+    types: [
+      "DJ",
+      "Club DJ",
+      "Wedding DJ",
+      "Mobile DJ",
+      "Festival DJ",
+      "Radio DJ",
+      "Vinyl DJ",
+      "EDM DJ",
+      "House DJ",
+      "Techno DJ",
+      "Trance DJ",
+      "Drum & Bass DJ",
+      "Dubstep DJ",
+      "Lounge / Chill DJ",
+    ],
+    toggles: {
+      "DJ": ["Brings Equipment", "Uses Venue", "Lighting Included", "MC Services"],
+      "Wedding DJ": ["MC Services", "Lighting", "Ceremony Music", "Full Package"],
+      "Mobile DJ": ["Full PA", "Lighting", "MC Services", "Karaoke"],
+    },
+  },
+  {
+    name: "Comedy & Spoken",
+    types: [
+      "Stand-Up Comedian",
+      "Improvisational Comedian",
+      "Sketch Comedian",
+      "Roast Comedian",
+      "MC / Host",
+      "Event Emcee",
+      "Motivational Speaker",
+      "Storyteller",
+      "Spoken Word Poet",
+      "Slam Poet",
+    ],
+    toggles: {
+      "Stand-Up Comedian": ["Clean", "Adult", "Corporate Safe", "Roast Style"],
+      "MC / Host": ["Corporate", "Wedding", "Party", "Awards", "Bilingual"],
+    },
+  },
+  {
+    name: "Magic & Illusion",
+    types: [
+      "Magician",
+      "Close-Up Magician",
+      "Stage Magician",
+      "Illusionist",
+      "Mentalist",
+      "Hypnotist",
+      "Escape Artist",
+    ],
+    toggles: {
+      "Magician": ["Close-Up", "Stage", "Kids Friendly", "Adult", "Comedy"],
+      "Hypnotist": ["Stage Show", "Comedy", "Adult", "Corporate Safe"],
+    },
+  },
+  {
+    name: "Character & Themed",
+    types: [
+      "Character Entertainer",
+      "Mascot",
+      "Costume Performer",
+      "Superhero Performer",
+      "Princess Performer",
+      "Movie Character Performer",
+      "TV Character Impersonator",
+      "Cartoon Character Performer",
+      "Fantasy / Medieval Character",
+      "Pirate Performer",
+      "Viking Performer",
+      "Historical Reenactor",
+    ],
+    toggles: {
+      "Princess Performer": ["Singing", "Storytelling", "Meet & Greet", "Party Host"],
+      "Superhero Performer": ["Kids Party", "Meet & Greet", "Photo Ops", "Games"],
+    },
+  },
+  {
+    name: "Party & Interactive",
+    types: [
+      "Party Host",
+      "Games Host",
+      "Trivia Host",
+      "Bingo Caller",
+      "Karaoke Host",
+      "Dance Instructor",
+      "Flash Mob Performer",
+      "Interactive Actor",
+      "Murder Mystery Performer",
+    ],
+    toggles: {
+      "Party Host": ["Kids", "Adult", "Corporate", "Games"],
+      "Trivia Host": ["General", "Themed", "Corporate", "Pub Style"],
+      "Dance Instructor": ["Salsa", "Bachata", "Swing", "Hip-Hop", "Wedding First Dance"],
+    },
+  },
+  {
+    name: "Specialty & Novelty",
+    types: [
+      "Beatboxer",
+      "Freestyle Rapper",
+      "Loop Artist",
+      "Human Statue",
+      "Speed Painter",
+      "Sand Artist",
+      "Chalk Artist",
+      "Live Illustrator",
+      "Calligrapher",
+      "Graffiti Artist (Live)",
+      "Body Painter",
+      "Caricaturist",
+    ],
+    toggles: {
+      "Beatboxer": ["Solo", "With Band", "Looping", "Battle"],
+      "Caricaturist": ["Traditional", "Digital", "Colour", "Black & White"],
+    },
+  },
+  {
+    name: "Children & Family",
+    types: [
+      "Children's Party Entertainer",
+      "Kids Clown",
+      "Kids Magician",
+      "Kids Singer",
+      "Kids Dancer",
+      "Puppet Show",
+      "Puppeteer",
+      "Storybook Performer",
+      "Fairy Performer",
+      "Superhero Kids Entertainer",
+      "Face Painter",
+    ],
+    toggles: {
+      "Children's Party Entertainer": ["Games", "Magic", "Balloons", "Face Paint"],
+      "Kids Clown": ["Balloons", "Magic", "Games", "Face Paint"],
+    },
+  },
+  {
+    name: "Cultural & Traditional",
+    types: [
+      "Cultural Dancer",
+      "Traditional Drummer",
+      "Indigenous Performer",
+      "Haka Performer",
+      "Samba Dancer",
+      "Flamenco Dancer",
+      "Belly Dancer",
+      "Bollywood Dancer",
+      "African Dance Troupe",
+      "Polynesian Dancer",
+      "Irish Dancer",
+      "Scottish Performer",
+      "Mariachi",
+    ],
+    toggles: {
+      "Belly Dancer": ["Solo", "Group", "Sword", "Veil", "Fire"],
+      "Polynesian Dancer": ["Solo", "Group", "Fire Knife", "Workshop"],
+    },
+  },
+  {
+    name: "Dance (General)",
+    types: [
+      "Contemporary Dancer",
+      "Hip-Hop Dancer",
+      "Breakdancer",
+      "Ballroom Dancer",
+      "Latin Dancer",
+      "Salsa Dancer",
+      "Bachata Dancer",
+      "Tango Dancer",
+      "Swing Dancer",
+      "Tap Dancer",
+      "Jazz Dancer",
+      "Ballet Dancer",
+    ],
+    toggles: {
+      "Ballroom Dancer": ["Duo", "Demo", "Lessons", "Competition Style"],
+      "Breakdancer": ["Solo", "Crew", "Battle", "Interactive"],
+    },
+  },
+  {
+    name: "Modern & Digital",
+    types: [
+      "Streamer",
+      "Live Content Creator",
+      "Virtual Entertainer",
+      "VTuber",
+      "Gaming Host",
+      "Esports Caster",
+      "Interactive Digital Host",
+    ],
+    toggles: {
+      "Streamer": ["Gaming", "Just Chatting", "IRL", "Event Coverage"],
+      "Esports Caster": ["Play-by-Play", "Colour", "Analyst", "Host"],
+    },
+  },
+  {
+    name: "Equipment & Event Hire",
+    types: [
+      "Fairy Floss Machine",
+      "Jumping Castle",
+      "Popcorn Machine",
+      "Snow Cone Machine",
+      "Photo Booth",
+      "Dunk Tank",
+      "Balloon Arch / Garland",
+      "Party Lights / DJ Lights",
+      "Marquee / Gazebo",
+      "Chocolate Fountain",
+      "Hot Dog Machine",
+      "Slushie Machine",
+      "Bubble Machine",
+      "Face Painting Station",
+      "Ball Pit",
+      "Obstacle Course",
+      "Other Event Hire",
+    ],
+    toggles: {
+      "Jumping Castle": ["Kids", "Adult", "Wet Slide", "Combo"],
+      "Photo Booth": ["Print", "Digital", "Props Included", "Green Screen"],
+      "Marquee / Gazebo": ["Small", "Medium", "Large", "With Sides"],
+    },
+  },
+];
+
+// Helper to get category by name
+export const getCategoryByName = (name) => {
+  return entertainerCategories.find(cat => cat.name === name);
+};
+
+// Helper to check if category is age restricted
+export const isAgeRestricted = (categoryName) => {
+  const cat = getCategoryByName(categoryName);
+  return cat?.ageRestricted || false;
+};
+
+// Helper to get toggles for a specific type within a category
+export const getTogglesForType = (categoryName, typeName) => {
+  const cat = getCategoryByName(categoryName);
+  return cat?.toggles?.[typeName] || [];
+};
+
+export default entertainerCategories;
