@@ -205,6 +205,7 @@ export default function AuthProvider({ children }) {
       ...(referralCode ? { referralCode } : {}),
       ...(campaignId ? { campaignId } : {}),
       ...(leadId ? { leadId } : {}),
+      ...(rest.idType ? { idType: rest.idType } : {}),
       ...(role === "entertainer"
         ? {
             contractorAgreementAcceptedAt: serverTimestamp(),

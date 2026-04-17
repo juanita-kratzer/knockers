@@ -507,4 +507,58 @@ Firestore rules for `/companies` and `/companies_dev` left in place (harmless, u
 
 ---
 
-*Last updated: Firestore rules deployed (role switching, entertainer CREATE relaxed, usernames collection). Company affiliation removed from entire app. Profile save and entertainer signup permissions issues fixed. Awaiting Stripe setup + deploy + test + backend police check callables.*
+## Round 1 foundation fixes (completed)
+
+Applied 8 critical fixes from full codebase audit:
+
+| # | Fix | Files |
+|---|-----|-------|
+| C1 | `.gitignore` updated; `.env.example` + `functions/.env.example` created | `.gitignore`, `.env.example`, `functions/.env.example` |
+| C4 | Atomic username reservation via Firestore `runTransaction` | `AuthContext.jsx` |
+| C5 | Fixed duplicate imports in `ProtectedRoute.jsx` | `ProtectedRoute.jsx` |
+| C6 | Escrow fix: removed `transfer_data`/`application_fee_amount` from `deposit.ts`; payout debug log added | `deposit.ts`, `payout.ts` |
+| I1 | Git repo initialised; initial commit | `.git` |
+| I3 | README replaced with real project docs | `README.md` |
+| I4 | Removed dead `companies`/`companies_dev` Firestore rules | `firestore.rules` |
+| I8 | `cancelBooking`/`confirmDepositPaid` route through Cloud Functions when Stripe enabled | `useBookings.js` |
+
+---
+
+## Stripe deployment (completed)
+
+- **Stripe test keys** configured in `.env` and `functions/.env` (gitignored).
+- **17 Cloud Functions** deployed to `knockers-c5e30` / `australia-southeast1`.
+- **Firestore rules** deployed.
+- **Stripe webhook** registered: `https://australia-southeast1-knockers-c5e30.cloudfunctions.net/stripeWebhook`
+- Events: `payment_intent.succeeded`, `payment_intent.payment_failed`, `account.updated`, `capability.updated`, `identity.verification_session.verified`, `identity.verification_session.requires_input`, `identity.verification_session.canceled`
+- **Node.js 20** deprecation warning (2026-04-30) — upgrade to Node 22 soon.
+
+---
+
+## Entertainer signup & role-switching fixes (completed)
+
+Fixed 3 bugs where "become entertainer" flow didn't properly update UI:
+
+| Bug | Root cause | Fix |
+|-----|-----------|-----|
+| Phone + ID asked again | Talent signup didn't check existing user data | Phone hidden for existing users; `idType` prefilled from `userData` (editable); `workRights` always shown |
+| "Switch to entertainer" missing | `hasEntertainerProfile` not seeded from `userData` before async snapshot | `RoleContext` now seeds from `userData.hasEntertainerProfile` immediately |
+| "Join as entertainer" still in Settings | Only checked `hasEntertainerProfile`, not `role` | Settings checks `hasEntertainerProfile OR isEntertainer`; Profile checks `hasEntertainerProfile OR entertainer doc` |
+
+Additional changes:
+- `idType` from client signup now persisted to user doc (`AuthContext.jsx`)
+- Talent signup navigates to `/profile` after success (not `/talent/edit-profile`)
+
+---
+
+## UI/UX polish (completed)
+
+| Fix | File | Detail |
+|-----|------|--------|
+| Phone help text neutral | `client/Signup.jsx` | Was: "Required so entertainers can block known contacts for privacy" → Now: "Required for account verification and booking updates" |
+| Safe-area header padding | `client/Signup.jsx`, `talent/Signup.jsx` | Added `padding-top: env(safe-area-inset-top, 0px)` to Container on both signup pages |
+| ABN conditional field | `talent/Signup.jsx` | Step 3 asks "Do you earn more than $75,000/year?" — Yes: ABN required (11 digits); No: disclaimer that user is responsible for tax obligations. Stored on entertainer doc as `earnsOver75k` + `abn`. |
+
+---
+
+*Last updated: Stripe deployed and webhook registered. Entertainer signup/role-switching bugs fixed. ABN field added. Ready for end-to-end payment testing.*

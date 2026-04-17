@@ -44,7 +44,7 @@ const WORK_RIGHTS = [
 export default function TalentSignup() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { user, signup, addEntertainerProfile } = useAuth();
+  const { user, userData, signup, addEntertainerProfile } = useAuth();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -70,8 +70,10 @@ export default function TalentSignup() {
     locationData: null, // { suburb, state, region, lat, lng } from SuburbAutocomplete; required to submit
 
     // Step 3: Verification
-    idType: "",
+    idType: user && userData?.idType ? userData.idType : "",
     workRights: "",
+    earnsOver75k: null,
+    abn: "",
     blockContacts: false,
     policeCheckOptIn: false,
 
@@ -151,6 +153,12 @@ export default function TalentSignup() {
     if (stepNum === 3) {
       if (!formData.idType) errors.idType = "Please select an ID type";
       if (!formData.workRights) errors.workRights = "Work rights selection is required";
+      if (formData.earnsOver75k === null) errors.earnsOver75k = "Please select an option";
+      if (formData.earnsOver75k && !formData.abn.trim()) {
+        errors.abn = "ABN is required if your annual income exceeds $75,000";
+      } else if (formData.earnsOver75k && !/^\d{11}$/.test(formData.abn.replace(/\s/g, ""))) {
+        errors.abn = "ABN must be 11 digits";
+      }
     }
 
     if (stepNum === 4) {
@@ -186,10 +194,11 @@ export default function TalentSignup() {
     profileType: formData.policeCheckOptIn ? "hard" : "soft",
     idType: formData.idType,
     workRights: formData.workRights,
+    earnsOver75k: formData.earnsOver75k || false,
+    ...(formData.abn.trim() ? { abn: formData.abn.replace(/\s/g, "") } : {}),
     blockContacts: formData.blockContacts,
     agreedToTermsAt: new Date(),
     agreementVersion: "v1",
-    // Bank details deprecated; payouts via Stripe Connect (Finances page)
   });
 
   const handleSubmit = async () => {
@@ -201,7 +210,7 @@ export default function TalentSignup() {
     try {
       if (isAddingToExistingAccount) {
         await addEntertainerProfile(buildEntertainerProfileData());
-        navigate("/talent/edit-profile", { replace: true });
+        navigate("/profile", { replace: true });
       } else {
         await signup(formData.email, formData.password, {
           firstName: formData.firstName,
@@ -366,23 +375,25 @@ export default function TalentSignup() {
               {fieldErrors.dateOfBirth && <ErrorText>{fieldErrors.dateOfBirth}</ErrorText>}
             </FormGroup>
 
-            <FormGroup>
-              <Label>Phone Number{!isAddingToExistingAccount ? "" : " (optional)"}</Label>
-              <InputWrapper>
-                <InputIcon>
-                  <Phone size={18} />
-                </InputIcon>
-                <Input
-                  type="tel"
-                  placeholder="04XX XXX XXX"
-                  value={formData.phone}
-                  onChange={(e) => updateField("phone", e.target.value)}
-                  $error={fieldErrors.phone}
-                />
-              </InputWrapper>
-              <HelpText>Hidden from clients - for verification only</HelpText>
-              {fieldErrors.phone && <ErrorText>{fieldErrors.phone}</ErrorText>}
-            </FormGroup>
+            {!isAddingToExistingAccount && (
+              <FormGroup>
+                <Label>Phone Number</Label>
+                <InputWrapper>
+                  <InputIcon>
+                    <Phone size={18} />
+                  </InputIcon>
+                  <Input
+                    type="tel"
+                    placeholder="04XX XXX XXX"
+                    value={formData.phone}
+                    onChange={(e) => updateField("phone", e.target.value)}
+                    $error={fieldErrors.phone}
+                  />
+                </InputWrapper>
+                <HelpText>Hidden from clients - for verification only</HelpText>
+                {fieldErrors.phone && <ErrorText>{fieldErrors.phone}</ErrorText>}
+              </FormGroup>
+            )}
 
             {!isAddingToExistingAccount && (
               <>
@@ -561,6 +572,57 @@ export default function TalentSignup() {
               {fieldErrors.workRights && <ErrorText>{fieldErrors.workRights}</ErrorText>}
             </FormGroup>
 
+            <FormGroup>
+              <Label>Do you earn more than $75,000 per year?</Label>
+              <RadioRow>
+                <RadioOption
+                  $selected={formData.earnsOver75k === true}
+                  onClick={() => updateField("earnsOver75k", true)}
+                >
+                  Yes
+                </RadioOption>
+                <RadioOption
+                  $selected={formData.earnsOver75k === false}
+                  onClick={() => updateField("earnsOver75k", false)}
+                >
+                  No
+                </RadioOption>
+              </RadioRow>
+              {fieldErrors.earnsOver75k && <ErrorText>{fieldErrors.earnsOver75k}</ErrorText>}
+            </FormGroup>
+
+            {formData.earnsOver75k === true && (
+              <FormGroup>
+                <Label>ABN (Australian Business Number)</Label>
+                <InputWrapper>
+                  <InputIcon>
+                    <Shield size={18} />
+                  </InputIcon>
+                  <Input
+                    type="text"
+                    placeholder="XX XXX XXX XXX"
+                    value={formData.abn}
+                    onChange={(e) => updateField("abn", e.target.value)}
+                    $error={fieldErrors.abn}
+                    maxLength={14}
+                  />
+                </InputWrapper>
+                <HelpText>Required by law if your annual turnover exceeds $75,000</HelpText>
+                {fieldErrors.abn && <ErrorText>{fieldErrors.abn}</ErrorText>}
+              </FormGroup>
+            )}
+
+            {formData.earnsOver75k === false && (
+              <InfoBox>
+                <Shield size={16} />
+                <span>
+                  You are not required to provide an ABN at this time. You are responsible for
+                  meeting your own tax obligations. If your income exceeds $75,000 in a financial
+                  year, you must register for an ABN and GST.
+                </span>
+              </InfoBox>
+            )}
+
             <Divider />
 
             <PrivacyOption>
@@ -719,6 +781,7 @@ export default function TalentSignup() {
 
 const Container = styled.div`
   min-height: 100vh;
+  padding-top: env(safe-area-inset-top, 0px);
   background: ${({ theme }) => theme.bg};
   display: flex;
   flex-direction: column;
@@ -983,6 +1046,25 @@ const AdultBadge = styled.span`
   font-size: 0.7rem;
   font-weight: 700;
   border-radius: 4px;
+`;
+
+const RadioRow = styled.div`
+  display: flex;
+  gap: 12px;
+`;
+
+const RadioOption = styled.button`
+  flex: 1;
+  padding: 14px;
+  background: ${({ $selected, theme }) =>
+    $selected ? `${theme.primary}15` : theme.bgAlt};
+  border: 2px solid ${({ $selected, theme }) =>
+    $selected ? theme.primary : theme.border};
+  border-radius: 12px;
+  color: ${({ $selected, theme }) => ($selected ? theme.primary : theme.text)};
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
 `;
 
 const Divider = styled.div`

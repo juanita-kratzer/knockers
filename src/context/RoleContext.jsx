@@ -54,6 +54,7 @@ export default function RoleProvider({ children }) {
 
     setRoleState(userData.role || null);
     setAgeVerified(userData.ageVerified || false);
+    if (userData.hasEntertainerProfile) setHasEntertainerProfile(true);
     setLoading(false);
 
     // Apple review account: treat as having entertainer profile so they can switch Client/Entertainer (isolated override)

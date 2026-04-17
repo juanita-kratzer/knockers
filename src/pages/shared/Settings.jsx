@@ -58,7 +58,7 @@ export default function Settings() {
               <ChevronRight size={20} />
             </SettingsItem>
 
-            {!hasEntertainerProfile && (
+            {!hasEntertainerProfile && !isEntertainer && (
               <SettingsItem to="/talent/signup">
                 <SettingsIcon>
                   <Theater size={20} />

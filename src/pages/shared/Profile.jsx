@@ -262,7 +262,7 @@ export default function Profile() {
       </MenuSection>
 
       {/* Become Entertainer (client without entertainer profile) */}
-      {isClient && !hasEntertainerProfile && (
+      {isClient && !hasEntertainerProfile && !entertainer && (
         <SwitchSection>
           <SwitchText>Want to offer your services?</SwitchText>
           <SwitchButton to="/talent/signup">Become an Entertainer</SwitchButton>

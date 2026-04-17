@@ -256,7 +256,7 @@ export default function ClientSignup() {
                 />
               </InputWrapper>
               <HelpText>
-                Required so entertainers can block known contacts for privacy
+                Required for account verification and booking updates
               </HelpText>
               {fieldErrors.phone && <ErrorText>{fieldErrors.phone}</ErrorText>}
             </FormGroup>
@@ -539,6 +539,7 @@ export default function ClientSignup() {
 
 const Container = styled.div`
   min-height: 100vh;
+  padding-top: env(safe-area-inset-top, 0px);
   background: ${({ theme }) => theme.bg};
   display: flex;
   flex-direction: column;
