@@ -1,10 +1,11 @@
 /**
  * Release payout to entertainer when booking is completed.
- * Transfer deposit (minus platform fee already taken at charge) to Connect account.
+ * Transfers only the deposit amount to the entertainer's Connect account.
+ * Platform keeps the $30 fee (PLATFORM_FEE_CENTS) because it is never transferred.
  *
  * NOTE: The Stripe transfer call lives inside a Firestore transaction. The idempotencyKey
- * prevents duplicate transfers on retry. For a future refactor, consider reading inside
- * one transaction, calling Stripe outside, and writing in a second transaction.
+ * prevents duplicate transfers on retry.
+ * TODO: Refactor to two-phase (read tx → Stripe call → write tx) when volume warrants it.
  */
 
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
@@ -46,6 +47,14 @@ export async function releasePayoutOnCompletion(bookingId: string, entertainerId
 
     const amountToEntertainerCents = booking.stripe?.amountDepositCents ?? Math.round((booking.depositAmount ?? 0) * 100);
     if (amountToEntertainerCents <= 0) throw new Error("No deposit amount to transfer");
+
+    const amountTotalCents = booking.stripe?.amountTotalCents ?? 0;
+    console.log("PAYOUT DEBUG", {
+      bookingId,
+      depositCents: amountToEntertainerCents,
+      totalCharged: amountTotalCents,
+      platformFeeKept: amountTotalCents - amountToEntertainerCents,
+    });
 
     const chargeId = booking.stripe?.chargeId;
     if (!chargeId) throw new Error("No charge id on booking");

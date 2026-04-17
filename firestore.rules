@@ -244,22 +244,6 @@ service cloud.firestore {
     }
 
     // ============================================
-    // COMPANIES COLLECTION
-    // ============================================
-    match /companies/{companyId} {
-      // Anyone authenticated can read companies (for code validation)
-      allow read: if isAuthenticated();
-      
-      // Only admins can create/update companies (via backend)
-      allow create, update, delete: if false;
-    }
-    
-    match /companies_dev/{companyId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated(); // More permissive for dev
-    }
-
-    // ============================================
     // SAFETY ALERTS (Sensitive)
     // ============================================
     match /safetyAlerts/{alertId} {

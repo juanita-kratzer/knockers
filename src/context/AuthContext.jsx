@@ -154,7 +154,7 @@ export default function AuthProvider({ children }) {
     if (!isConfigured) throw new Error("App is not configured. Firebase is required for signup.");
     const { auth, db } = await import("../firebase");
     const { createUserWithEmailAndPassword, updateProfile } = await import("firebase/auth");
-    const { doc, setDoc, getDoc, serverTimestamp } = await import("firebase/firestore");
+    const { doc, setDoc, getDoc, runTransaction, serverTimestamp } = await import("firebase/firestore");
     const { COL } = await import("../lib/collections");
 
     const { displayName, role, firstName, lastName, phone, username, dateOfBirth, signupSource, referralCode, campaignId, leadId, marketingOptIn, ...rest } = extra;
@@ -169,14 +169,15 @@ export default function AuthProvider({ children }) {
 
     const normalizedUsername = username ? username.toLowerCase().trim() : "";
 
-    // Reserve username atomically if provided
     if (normalizedUsername) {
       const usernameRef = doc(db, "usernames", normalizedUsername);
-      const existing = await getDoc(usernameRef);
-      if (existing.exists()) {
-        throw new Error("This username is already taken. Please choose another.");
-      }
-      await setDoc(usernameRef, { userId: newUser.uid, createdAt: serverTimestamp() });
+      await runTransaction(db, async (transaction) => {
+        const existing = await transaction.get(usernameRef);
+        if (existing.exists()) {
+          throw new Error("This username is already taken. Please choose another.");
+        }
+        transaction.set(usernameRef, { userId: newUser.uid, createdAt: serverTimestamp() });
+      });
     }
 
     const userData = {

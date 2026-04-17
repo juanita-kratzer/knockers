@@ -1,7 +1,8 @@
 // src/components/ProtectedRoute.jsx
 // Route guards for role-based access
 
-import { Navigate, useLocation } from "react-router-dom";
+import { Navigate, useLocation, Link } from "react-router-dom";
+import styled from "styled-components";
 import { useAuth } from "../context/AuthContext";
 import { useRole, ROLES } from "../context/RoleContext";
 import { isAppleReviewAccount } from "../lib/appleReview";
@@ -177,9 +178,6 @@ export function RedirectIfEntertainer({ children, to = "/talent" }) {
   return children;
 }
 
-// Age verification gate component
-import styled from "styled-components";
-
 function AgeGate({ onVerify }) {
   return (
     <GateContainer>
@@ -202,8 +200,6 @@ function AgeGate({ onVerify }) {
     </GateContainer>
   );
 }
-
-import { Link } from "react-router-dom";
 
 const GateContainer = styled.div`
   min-height: 100vh;

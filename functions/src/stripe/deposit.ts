@@ -1,10 +1,8 @@
 /**
- * Create PaymentIntent for deposit + platform fee. Client pays; funds held by platform.
- *
- * NOTE: The Stripe API call lives inside a Firestore transaction. This is technically
- * unsafe (transactions may retry, and Stripe calls have side effects). The idempotencyKey
- * guard prevents duplicate charges on retry. If restructuring, move the Stripe call
- * outside the transaction: read inside tx → call Stripe → write inside a second tx.
+ * Create PaymentIntent for deposit + platform fee. Client pays; funds held on platform.
+ * Uses "separate charges and transfers" pattern: no transfer_data on the PaymentIntent.
+ * Funds stay on the platform until payout.ts transfers the deposit to the entertainer
+ * on booking completion. Platform retains PLATFORM_FEE_CENTS ($30).
  */
 
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
@@ -66,13 +64,15 @@ export async function createDepositPaymentIntent(
     const amountTotalCents = depositCents + PLATFORM_FEE_CENTS;
     const key = idempotencyKey("deposit", bookingId, "1");
 
+    // Separate charges and transfers: platform holds all funds until booking
+    // completion, then payout.ts transfers depositCents to the connected account.
+    // Platform keeps PLATFORM_FEE_CENTS because only the deposit is transferred.
+    // TODO: Refactor Stripe call outside transaction (two-phase) when volume warrants it.
     const paymentIntent = await stripe.paymentIntents.create(
       {
         amount: amountTotalCents,
         currency: "aud",
         automatic_payment_methods: { enabled: true },
-        transfer_data: { destination: connectAccountId },
-        application_fee_amount: PLATFORM_FEE_CENTS,
         metadata: {
           bookingId,
           clientId,

@@ -442,10 +442,15 @@ export async function initiateDepositPayment(bookingId) {
 }
 
 /**
- * Mark deposit as paid (called after successful payment)
+ * Mark deposit as paid. When Stripe is enabled the webhook handles this
+ * server-side (payment_intent.succeeded), so this is a no-op. When Stripe
+ * is off (mock/dev mode) we write directly for testing convenience.
  */
 export async function confirmDepositPaid(bookingId, paymentDetails) {
   if (!isFirebaseConfigured()) return;
+
+  const { isStripeEnabled } = await import("../lib/featureFlags");
+  if (isStripeEnabled()) return;
 
   const { db } = await import("../firebase");
   const { doc, updateDoc, serverTimestamp } = await import("firebase/firestore");
@@ -563,10 +568,18 @@ export async function declineBooking(bookingId, reason = "") {
 }
 
 /**
- * Cancel a booking with fee calculation
+ * Cancel a booking. When Stripe is enabled, delegates to the Cloud Function
+ * which handles refunds/fees server-side. When Stripe is off, writes directly.
  */
 export async function cancelBooking(bookingId, cancelledBy, reason = "") {
   if (!isFirebaseConfigured()) return { fees: { reason: "Demo mode" } };
+
+  const { isStripeEnabled } = await import("../lib/featureFlags");
+  if (isStripeEnabled()) {
+    const { cancelBookingWithFees } = await import("../lib/stripeCallables");
+    const mapped = cancelledBy === "entertainer" ? "ENTERTAINER" : "CLIENT";
+    return cancelBookingWithFees(bookingId, mapped, reason);
+  }
 
   const { db } = await import("../firebase");
   const { doc, getDoc, updateDoc, serverTimestamp } = await import("firebase/firestore");
