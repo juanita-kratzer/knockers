@@ -425,34 +425,24 @@ const StatLabel = styled.div`
 
 const TabBar = styled.div`
   display: flex;
-  border-bottom: 1px solid ${({ theme }) => theme.border};
-  padding: 0 16px;
+  gap: 8px;
+  padding: 8px 16px;
 `;
 
 const Tab = styled.button`
   flex: 1;
-  padding: 14px 8px;
-  border: none;
-  background: none;
+  padding: 10px 8px;
+  border: 1px solid ${({ $active, theme }) => $active ? theme.primary : theme.border};
+  background: ${({ $active, theme }) => $active ? `${theme.primary}15` : "transparent"};
   color: ${({ $active, theme }) => $active ? theme.primary : theme.muted};
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   cursor: pointer;
-  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  
-  &::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: ${({ $active, theme }) => $active ? theme.primary : "transparent"};
-  }
+  border-radius: 50px;
 `;
 
 const Badge = styled.span`

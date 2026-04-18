@@ -44,7 +44,7 @@ export default function AdminLayout() {
       <Sidebar>
         <SidebarHeader>
           <SidebarTitle>Admin</SidebarTitle>
-          <BackLink to="/">← App</BackLink>
+          <BackLink to="/">Back</BackLink>
         </SidebarHeader>
         <Nav>
           {navItems.map(({ to, label, icon: Icon }) => (
@@ -93,12 +93,17 @@ const SidebarTitle = styled.h2`
 `;
 
 const BackLink = styled(Link)`
-  font-size: 0.85rem;
-  color: ${({ theme }) => theme.muted};
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.35rem 1rem;
+  border: 1px solid ${({ theme }) => theme.primary};
+  border-radius: 50px;
+  background: transparent;
+  color: ${({ theme }) => theme.primary};
+  font-weight: 600;
+  font-size: 0.8rem;
   text-decoration: none;
-  &:hover {
-    color: ${({ theme }) => theme.text};
-  }
 `;
 
 const Nav = styled.nav`

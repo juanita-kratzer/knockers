@@ -1,19 +1,22 @@
 // src/pages/shared/Home.jsx
-// Map-based home page showing entertainers by suburb with Google Maps
+// Home page with map/grid toggle for browsing entertainers
 
 import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import styled from "styled-components";
 import { GoogleMap, useJsApiLoader, Marker, InfoWindow, Polygon } from "@react-google-maps/api";
-import { useEntertainersByPostcode } from "../../hooks/useEntertainers";
+import { useEntertainersByPostcode, useEntertainers } from "../../hooks/useEntertainers";
 import { useAustralianSuburbs } from "../../hooks/useAustralianSuburbs";
 import { useSuburbBoundaries, ringToPath } from "../../hooks/useSuburbBoundaries";
 import { getVisibleSuburbsForMap, clusterSuburbsByZoom } from "../../utils/geoUtils";
+import { entertainerCategories } from "../../data/entertainerTypes";
 import LoadingSpinner from "../../components/LoadingSpinner";
+import EmptyState from "../../components/EmptyState";
+import ErrorMessage from "../../components/ErrorMessage";
 import PromoBanner from "../../components/PromoBanner";
 import SuburbAutocomplete from "../../components/SuburbAutocomplete";
 import { useRole } from "../../context/RoleContext";
-import { MapPin, Navigation, ChevronDown, Crosshair, X } from "lucide-react";
+import { MapPin, Navigation, ChevronDown, Crosshair, X, Map as MapIcon, LayoutGrid } from "lucide-react";
 import { logger } from "../../lib/logger";
 
 // Debounce delay for map bounds/zoom (stops re-render storm on mobile)
@@ -89,9 +92,23 @@ const defaultCenter = {
 
 export default function Home() {
   const navigate = useNavigate();
-  const { isEntertainer } = useRole();
+  const { isEntertainer, ageVerified } = useRole();
+  const [viewMode, setViewMode] = useState("map");
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedLocation, setSelectedLocation] = useState("");
+  const [showAdult, setShowAdult] = useState(false);
+  const [showGridFilters, setShowGridFilters] = useState(false);
   const { postcodeData, loading } = useEntertainersByPostcode();
+
+  const gridFilters = useMemo(() => ({
+    category: selectedCategory || undefined,
+    suburb: selectedLocation || undefined,
+    hideAdult: !showAdult || !ageVerified,
+    searchQuery: searchQuery || undefined,
+  }), [selectedCategory, selectedLocation, showAdult, ageVerified, searchQuery]);
+
+  const { entertainers: gridEntertainers, loading: gridLoading, error: gridError } = useEntertainers(gridFilters);
   const australianSuburbs = useAustralianSuburbs();
   const suburbBoundaries = useSuburbBoundaries();
   const [userLocation, setUserLocation] = useState(null);
@@ -262,13 +279,21 @@ export default function Home() {
   const locationStatusText = locationLabel
     || (userLocation ? "Current location" : locationLoading ? "Getting location…" : "Select location");
 
-  // Quick search handler
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      navigate(`/explore?q=${encodeURIComponent(searchQuery.trim())}`);
+      setViewMode("grid");
     }
   };
+
+  const handleClearGridFilters = () => {
+    setSearchQuery("");
+    setSelectedCategory("");
+    setSelectedLocation("");
+    setShowAdult(false);
+  };
+
+  const hasGridFilters = searchQuery || selectedCategory || selectedLocation;
 
   // Map data: one entry per postcode (e.g. 4217 = Surfers Paradise, Main Beach, Bundall, Benowa)
   const suburbsForMap = useMemo(() => {
@@ -359,16 +384,144 @@ export default function Home() {
               </FilterButton>
               {showFilterDropdown && (
                 <FilterDropdown>
-                  <FilterDropdownItem to="/explore" onClick={() => setShowFilterDropdown(false)}>Browse all entertainers</FilterDropdownItem>
+                  <FilterDropdownBtn type="button" onClick={() => { setShowFilterDropdown(false); setViewMode(viewMode === "grid" ? "map" : "grid"); }}>
+                    {viewMode === "grid" ? "Switch to map" : "Browse all entertainers"}
+                  </FilterDropdownBtn>
                 </FilterDropdown>
               )}
             </FilterWrap>
           </SearchInput>
         </SearchBar>
+        <ViewToggle>
+          <ViewToggleBtn type="button" $active={viewMode === "map"} onClick={() => setViewMode("map")}>
+            <MapIcon size={16} /> Map
+          </ViewToggleBtn>
+          <ViewToggleBtn type="button" $active={viewMode === "grid"} onClick={() => setViewMode("grid")}>
+            <LayoutGrid size={16} /> Grid
+          </ViewToggleBtn>
+        </ViewToggle>
       </HeaderArea>
 
       <PromoBanner targetRole="both" style={{ margin: "0 16px 12px" }} />
 
+      {viewMode === "grid" ? (
+        <GridSection>
+          <GridFilterBar>
+            <GridFilterToggle
+              type="button"
+              onClick={() => setShowGridFilters(!showGridFilters)}
+              $active={showGridFilters || hasGridFilters}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="4" y1="21" x2="4" y2="14" />
+                <line x1="4" y1="10" x2="4" y2="3" />
+                <line x1="12" y1="21" x2="12" y2="12" />
+                <line x1="12" y1="8" x2="12" y2="3" />
+                <line x1="20" y1="21" x2="20" y2="16" />
+                <line x1="20" y1="12" x2="20" y2="3" />
+              </svg>
+              Filters {hasGridFilters ? "(active)" : ""}
+            </GridFilterToggle>
+          </GridFilterBar>
+
+          {showGridFilters && (
+            <GridFiltersPanel>
+              <GFilterSection>
+                <GFilterLabel>Category</GFilterLabel>
+                <GFilterScroll>
+                  <GFilterChip $selected={!selectedCategory} onClick={() => setSelectedCategory("")}>All</GFilterChip>
+                  {entertainerCategories
+                    .filter((c) => !c.ageRestricted || (showAdult && ageVerified))
+                    .map((cat) => (
+                      <GFilterChip
+                        key={cat.name}
+                        $selected={selectedCategory === cat.name}
+                        onClick={() => setSelectedCategory(cat.name)}
+                      >
+                        {cat.emoji} {cat.name.split(",")[0]}
+                      </GFilterChip>
+                    ))}
+                </GFilterScroll>
+              </GFilterSection>
+
+              <GFilterRow>
+                <GFilterSection style={{ flex: 1 }}>
+                  <GFilterLabel>Location</GFilterLabel>
+                  <GFilterInput
+                    value={selectedLocation}
+                    onChange={(e) => setSelectedLocation(e.target.value)}
+                    placeholder="Suburb..."
+                  />
+                </GFilterSection>
+                {ageVerified && (
+                  <GFilterSection>
+                    <GFilterLabel>Adult Content</GFilterLabel>
+                    <GToggleSwitch $active={showAdult} onClick={() => setShowAdult(!showAdult)}>
+                      <GToggleKnob $active={showAdult} />
+                    </GToggleSwitch>
+                  </GFilterSection>
+                )}
+              </GFilterRow>
+
+              {hasGridFilters && (
+                <GClearFiltersBtn onClick={handleClearGridFilters}>Clear all filters</GClearFiltersBtn>
+              )}
+            </GridFiltersPanel>
+          )}
+
+          <GridResults>
+            {gridLoading ? (
+              <GridLoadingWrap><LoadingSpinner size={32} /></GridLoadingWrap>
+            ) : gridError ? (
+              <ErrorMessage error={gridError} onRetry={() => window.location.reload()} />
+            ) : gridEntertainers.length === 0 ? (
+              <EmptyState
+                icon=""
+                title="No entertainers found"
+                message={hasGridFilters
+                  ? "Try adjusting your filters or search terms"
+                  : "Be the first entertainer in your area!"
+                }
+                actionText={hasGridFilters ? "Clear filters" : "Join as entertainer"}
+                onAction={hasGridFilters ? handleClearGridFilters : undefined}
+                actionTo={hasGridFilters ? undefined : "/talent/signup"}
+              />
+            ) : (
+              <>
+                <GridResultsCount>
+                  {gridEntertainers.length} entertainer{gridEntertainers.length !== 1 ? "s" : ""} found
+                </GridResultsCount>
+                <EntGrid>
+                  {gridEntertainers.map((ent) => (
+                    <EntCard key={ent.id} to={`/talent/${ent.id}`}>
+                      <EntCardImage>
+                        {ent.photos?.[0] ? (
+                          <img src={ent.photos[0]} alt={ent.displayName} />
+                        ) : (
+                          <EntPlaceholder>{ent.displayName?.[0] || "?"}</EntPlaceholder>
+                        )}
+                        {ent.isAdultContent && <EntAdultBadge>18+</EntAdultBadge>}
+                      </EntCardImage>
+                      <EntCardContent>
+                        <EntNameRow>
+                          <EntName>{ent.displayName}</EntName>
+                          {ent.profileType === "hard" && <EntPoliceTick title="Police Check Verified">✓</EntPoliceTick>}
+                        </EntNameRow>
+                        <EntCategory>{ent.subCategories?.[0] || ent.categories?.[0] || "Entertainer"}</EntCategory>
+                        <EntMeta>
+                          <EntLocation>{(ent.suburb || "Location TBA").replace(/\s*\(.*\)$/, "").trim()}</EntLocation>
+                          {ent.pricing?.baseRate > 0 && <EntPrice>From ${ent.pricing.baseRate}</EntPrice>}
+                        </EntMeta>
+                        {ent.rating > 0 && <EntRating>{ent.rating.toFixed(1)} ({ent.reviewCount})</EntRating>}
+                      </EntCardContent>
+                    </EntCard>
+                  ))}
+                </EntGrid>
+              </>
+            )}
+          </GridResults>
+        </GridSection>
+      ) : (
       <MapContainer>
         {!isLoaded ? (
           <LoadingOverlay>
@@ -501,7 +654,7 @@ export default function Home() {
                     )}
                     <InfoCount>{selectedMarker.count} entertainer{selectedMarker.count !== 1 ? "s" : ""}</InfoCount>
                     <InfoButton
-                      onClick={() => navigate(`/explore?location=${encodeURIComponent(selectedMarker.name)}`)}
+                      onClick={() => { setSelectedLocation(selectedMarker.name); setSelectedMarker(null); setViewMode("grid"); }}
                     >
                       View All
                     </InfoButton>
@@ -581,6 +734,7 @@ export default function Home() {
           </>
         )}
       </MapContainer>
+      )}
     </Container>
   );
 }
@@ -675,12 +829,16 @@ const FilterDropdown = styled.div`
   overflow: hidden;
 `;
 
-const FilterDropdownItem = styled(Link)`
+const FilterDropdownBtn = styled.button`
   display: block;
+  width: 100%;
   padding: 12px 16px;
   color: ${({ theme }) => theme.text};
-  text-decoration: none;
+  background: none;
+  border: none;
+  text-align: left;
   font-size: 0.9rem;
+  cursor: pointer;
   &:active, &:hover {
     background: ${({ theme }) => theme.bgAlt};
   }
@@ -918,5 +1076,270 @@ const InfoButton = styled.button`
   &:hover {
     background: #7BC4E1;
   }
+`;
+
+// --- View toggle ---
+
+const ViewToggle = styled.div`
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+`;
+
+const ViewToggleBtn = styled.button`
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 0;
+  border: 1px solid ${({ $active, theme }) => $active ? theme.primary : theme.border};
+  background: ${({ $active, theme }) => $active ? `${theme.primary}15` : theme.card};
+  color: ${({ $active, theme }) => $active ? theme.primary : theme.muted};
+  border-radius: 50px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+`;
+
+// --- Grid view ---
+
+const GridSection = styled.div`
+  flex: 1;
+  overflow-y: auto;
+`;
+
+const GridFilterBar = styled.div`
+  padding: 0 16px 12px;
+`;
+
+const GridFilterToggle = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: 1px solid ${({ $active, theme }) => $active ? theme.primary : theme.border};
+  background: ${({ $active, theme }) => $active ? `${theme.primary}10` : theme.card};
+  color: ${({ $active, theme }) => $active ? theme.primary : theme.text};
+  border-radius: 50px;
+  font-size: 0.85rem;
+  cursor: pointer;
+`;
+
+const GridFiltersPanel = styled.div`
+  padding: 0 16px 16px;
+`;
+
+const GFilterSection = styled.div`
+  margin-bottom: 16px;
+  &:last-child { margin-bottom: 0; }
+`;
+
+const GFilterLabel = styled.div`
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: ${({ theme }) => theme.muted};
+  margin-bottom: 8px;
+  text-transform: uppercase;
+`;
+
+const GFilterScroll = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-bottom: 4px;
+`;
+
+const GFilterChip = styled.button`
+  padding: 8px 14px;
+  border: 1px solid ${({ $selected, theme }) => $selected ? theme.primary : theme.border};
+  background: ${({ $selected, theme }) => $selected ? `${theme.primary}15` : "transparent"};
+  color: ${({ $selected, theme }) => $selected ? theme.primary : theme.text};
+  border-radius: 50px;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  cursor: pointer;
+  flex-shrink: 0;
+`;
+
+const GFilterRow = styled.div`
+  display: flex;
+  gap: 16px;
+  align-items: flex-end;
+`;
+
+const GFilterInput = styled.input`
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid ${({ theme }) => theme.border};
+  background: ${({ theme }) => theme.bgAlt};
+  color: ${({ theme }) => theme.text};
+  border-radius: 10px;
+  font-size: 0.9rem;
+  outline: none;
+  &::placeholder { color: ${({ theme }) => theme.muted}; }
+  &:focus { border-color: ${({ theme }) => theme.primary}; }
+`;
+
+const GToggleSwitch = styled.button`
+  width: 50px;
+  height: 28px;
+  border-radius: 14px;
+  border: none;
+  background: ${({ $active, theme }) => $active ? theme.primary : theme.dark};
+  cursor: pointer;
+  position: relative;
+`;
+
+const GToggleKnob = styled.div`
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: white;
+  position: absolute;
+  top: 3px;
+  left: ${({ $active }) => $active ? "25px" : "3px"};
+  transition: left 150ms;
+`;
+
+const GClearFiltersBtn = styled.button`
+  width: 100%;
+  padding: 12px;
+  border: none;
+  background: transparent;
+  color: ${({ theme }) => theme.primary};
+  font-size: 0.9rem;
+  cursor: pointer;
+  margin-top: 8px;
+`;
+
+const GridResults = styled.div`
+  padding: 0 16px 100px;
+`;
+
+const GridLoadingWrap = styled.div`
+  display: flex;
+  justify-content: center;
+  padding: 48px 0;
+`;
+
+const GridResultsCount = styled.p`
+  color: ${({ theme }) => theme.muted};
+  font-size: 0.85rem;
+  margin: 0 0 16px 0;
+`;
+
+const EntGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  @media (min-width: 768px) { grid-template-columns: repeat(3, 1fr); }
+`;
+
+const EntCard = styled(Link)`
+  background: ${({ theme }) => theme.card};
+  border: 1px solid ${({ theme }) => theme.border};
+  border-radius: 16px;
+  overflow: hidden;
+  text-decoration: none;
+  &:active { transform: scale(0.98); }
+`;
+
+const EntCardImage = styled.div`
+  aspect-ratio: 1;
+  position: relative;
+  background: ${({ theme }) => theme.bgAlt};
+  img { width: 100%; height: 100%; object-fit: cover; }
+`;
+
+const EntPlaceholder = styled.div`
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.muted};
+  background: ${({ theme }) => theme.dark};
+`;
+
+const EntAdultBadge = styled.span`
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 4px 8px;
+  background: rgba(0, 0, 0, 0.7);
+  color: #ef4444;
+  font-size: 0.7rem;
+  font-weight: 700;
+  border-radius: 6px;
+`;
+
+const EntCardContent = styled.div`
+  padding: 12px;
+`;
+
+const EntNameRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+`;
+
+const EntName = styled.h3`
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: ${({ theme }) => theme.text};
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+const EntPoliceTick = styled.span`
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(59, 130, 246, 0.15);
+  color: #3b82f6;
+  font-size: 0.65rem;
+  font-weight: 700;
+  border-radius: 50%;
+`;
+
+const EntCategory = styled.p`
+  margin: 0 0 8px 0;
+  font-size: 0.8rem;
+  color: ${({ theme }) => theme.primary};
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+const EntMeta = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+`;
+
+const EntLocation = styled.span`
+  font-size: 0.75rem;
+  color: ${({ theme }) => theme.muted};
+`;
+
+const EntPrice = styled.span`
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: ${({ theme }) => theme.text};
+`;
+
+const EntRating = styled.div`
+  margin-top: 8px;
+  font-size: 0.75rem;
+  color: ${({ theme }) => theme.muted};
 `;
 

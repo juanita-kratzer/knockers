@@ -1,6 +1,6 @@
 /**
  * Phase 6: Verification fee (Apple IAP) — gate for booking, posting, messaging.
- * User must have paid the $2 verification fee (or have it waived by admin) to use paid features.
+ * User must have paid the $1.99 verification fee (or have it waived by admin) to use paid features.
  */
 
 import { isAppleReviewAccount } from "./appleReview";
@@ -21,4 +21,4 @@ export function canUsePaidFeatures(userData, user) {
 
 /** Message shown when user has not paid and is not waived */
 export const VERIFICATION_REQUIRED_MESSAGE =
-  "Pay the $2 verification fee to unlock messaging, bookings, and listings. Go to Settings → Verification.";
+  "Pay the $1.99 verification fee to unlock messaging, bookings, and listings. Go to Settings → Verification.";

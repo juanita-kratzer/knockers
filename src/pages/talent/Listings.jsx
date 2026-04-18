@@ -9,6 +9,7 @@ import { useMyEntertainerProfile } from "../../hooks/useEntertainers";
 import { useOpenListings, useMyApplications, applyToListing, APPLICATION_STATUS } from "../../hooks/useListings";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import ErrorMessage from "../../components/ErrorMessage";
+import PoliceCheckPrompt, { shouldShowPoliceCheckPrompt } from "../../components/PoliceCheckPrompt";
 import { logger } from "../../lib/logger";
 
 export default function Listings() {
@@ -17,6 +18,7 @@ export default function Listings() {
   const { listings, loading, error } = useOpenListings();
   const { applicationIdsByListing } = useMyApplications(user?.uid);
   const [applyingId, setApplyingId] = useState(null);
+  const [showPolicePrompt, setShowPolicePrompt] = useState(() => shouldShowPoliceCheckPrompt(userData));
 
   const handleApply = async (listingId) => {
     setApplyingId(listingId);
@@ -123,6 +125,11 @@ export default function Listings() {
           })}
         </List>
       )}
+
+      <PoliceCheckPrompt
+        show={showPolicePrompt}
+        onDismiss={() => setShowPolicePrompt(false)}
+      />
     </Container>
   );
 }

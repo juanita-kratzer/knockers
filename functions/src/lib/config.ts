@@ -23,8 +23,8 @@ export const COL = {
 };
 
 export const PLATFORM_FEE_CENTS = 3000;
-export const VERIFICATION_FEE_CENTS = 200;
-export const IAP_PRODUCT_ID_VERIFICATION = "knockers.verification.fee";
+export const VERIFICATION_FEE_CENTS = 199;
+export const IAP_PRODUCT_ID_VERIFICATION = "com.knockers.app.verificationfee";
 
 function firebaseConfig(): { stripe?: { webhook_secret?: string; secret_key?: string } } {
   try {
@@ -48,6 +48,13 @@ export function getStripeWebhookSecret(): string {
 
 export function isStripeEnabled(): boolean {
   return process.env.STRIPE_ENABLED === "true";
+}
+
+/** RevenueCat secret API key (server-side). Required for confirmVerificationPurchaseCallable. */
+export function getRevenueCatSecretKey(): string {
+  const secret = process.env.REVENUECAT_SECRET_KEY ?? (functions.config() as { revenuecat?: { secret_key?: string } }).revenuecat?.secret_key;
+  if (!secret) throw new Error("REVENUECAT_SECRET_KEY is not set");
+  return secret;
 }
 
 /** Apple IAP shared secret (App Store Connect). Required for verifyIAPReceiptCallable. */

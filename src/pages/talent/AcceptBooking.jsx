@@ -156,7 +156,7 @@ export default function AcceptBooking() {
         <PageHeader title="Accept booking" showBack />
         <ErrorMessage
           title="Verification required"
-          error="Pay the $2 verification fee to accept bookings. Go to Profile → Verification & Badges."
+          error="Pay the $1.99 verification fee to accept bookings. Go to Profile → Verification & Badges."
         />
         <BackLink to="/profile/verification">Verification</BackLink>
       </PageContainer>

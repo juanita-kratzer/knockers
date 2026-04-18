@@ -33,7 +33,7 @@ export const FAQ_USER = [
     id: "safety",
     title: "Safety Precautions",
     questions: [
-      { q: "Soft vs Hard profiles", a: "Soft profile = ID verified only. Hard profile = ID plus police check. You can filter by profile type when browsing." },
+      { q: "What is a Police Check Verified profile?", a: "All users start with a standard profile after ID verification. You can earn a \"Police Check Verified\" badge by completing and uploading a police check — this badge is displayed on your profile to build trust with clients." },
       { q: "Safety button", a: "Entertainers have access to a safety alert button during bookings. When pressed, it sends their location and booking details to their emergency contact." },
       { q: "Location sharing", a: "We recommend sharing your location with a friend when attending or hosting a booking. Entertainers can share their live location with their emergency contact via the safety button." },
       { q: "Start/End booking verification codes", a: "Arrival and completion codes help confirm that the entertainer attended and that the booking started and ended as agreed." },

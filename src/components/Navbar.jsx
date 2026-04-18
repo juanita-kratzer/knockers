@@ -76,7 +76,7 @@ export default function Navbar() {
             <>
               <Link to="/talent/login">Talent Login</Link>
               <Link to="/client/login">Client Login</Link>
-              <CTA to="/explore">Find Entertainment</CTA>
+              <CTA to="/">Find Entertainment</CTA>
             </>
           )}
         </Nav>

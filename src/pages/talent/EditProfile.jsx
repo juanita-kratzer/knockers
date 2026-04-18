@@ -14,11 +14,12 @@ import { storagePaths } from "../../lib/collections";
 import { sanitizeOrReject } from "../../lib/contentModeration";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import SuburbAutocomplete from "../../components/SuburbAutocomplete";
+import { canUsePaidFeatures } from "../../lib/verificationFee";
 import { logger } from "../../lib/logger";
 
 export default function EditProfile() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, userData } = useAuth();
   const { entertainer, loading } = useMyEntertainerProfile(user?.uid);
 
   const [saving, setSaving] = useState(false);
@@ -186,7 +187,6 @@ export default function EditProfile() {
         subCategories: formData.subCategories,
         suburb: formData.locationData?.suburb ?? formData.suburb ?? "",
         location: formData.locationData ?? undefined,
-        profileType: formData.profileType === "hard" ? "hard" : "soft",
         pricing: {
           baseRate: parseFloat(formData.baseRate) || 0,
         },
@@ -212,6 +212,10 @@ export default function EditProfile() {
 
   const handleToggleActive = async () => {
     if (!user || !entertainer) return;
+    if (!entertainer.isActive && !canUsePaidFeatures(userData, user)) {
+      alert("Pay the $1.99 verification fee before going live. Go to Profile → Verification & Badges.");
+      return;
+    }
     if (!entertainer.isActive && entertainer.stripe?.payoutsEnabled !== true) {
       alert("Connect Stripe to receive payments before going live. Set up payouts on the Finances page.");
       return;
@@ -317,16 +321,6 @@ export default function EditProfile() {
             onChange={handleInputChange}
             placeholder="Base Rate ($)"
           />
-          <ProfileTypeLabel>Profile type</ProfileTypeLabel>
-          <ProfileTypeHint>Soft = ID only; Hard = police check verified.</ProfileTypeHint>
-          <Select
-            name="profileType"
-            value={formData.profileType}
-            onChange={handleInputChange}
-          >
-            <option value="soft">Soft (ID only)</option>
-            <option value="hard">Hard (Police check)</option>
-          </Select>
         </Section>
 
         {/* Categories */}
@@ -420,13 +414,15 @@ const Container = styled.div`
 `;
 
 const SaveButton = styled.button`
-  padding: 8px 16px;
+  padding: 0.4rem 1.1rem;
   background: ${({ theme }) => theme.primary};
   color: #1a1d21;
   border: none;
-  border-radius: 8px;
+  border-radius: 50px;
   font-weight: 600;
+  font-size: 0.85rem;
   cursor: pointer;
+  min-width: 72px;
   
   &:disabled {
     opacity: 0.6;
@@ -465,7 +461,7 @@ const StatusText = styled.div`
 const ToggleButton = styled.button`
   padding: 10px 20px;
   border: none;
-  border-radius: 10px;
+  border-radius: 50px;
   font-weight: 600;
   cursor: pointer;
   background: ${({ $active }) => $active ? "#ef4444" : "#22c55e"};
@@ -522,7 +518,7 @@ const ServicePricingOptions = styled.div`
 
 const ServicePricingChip = styled.button`
   padding: 8px 14px;
-  border-radius: 10px;
+  border-radius: 50px;
   font-size: 0.85rem;
   font-weight: 500;
   border: 1px solid ${({ theme, $selected }) => ($selected ? theme.primary : theme.border)};
@@ -556,31 +552,6 @@ const Input = styled.input`
   &:focus {
     border-color: ${({ theme }) => theme.primary};
   }
-`;
-
-const ProfileTypeLabel = styled.div`
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: ${({ theme }) => theme.text};
-  margin: 12px 0 4px 0;
-`;
-
-const ProfileTypeHint = styled.p`
-  margin: 0 0 8px 0;
-  font-size: 0.8rem;
-  color: ${({ theme }) => theme.muted};
-`;
-
-const Select = styled.select`
-  width: 100%;
-  padding: 14px 16px;
-  background: ${({ theme }) => theme.card};
-  border: 1px solid ${({ theme }) => theme.border};
-  border-radius: 12px;
-  color: ${({ theme }) => theme.text};
-  font-size: 1rem;
-  margin-bottom: 12px;
-  outline: none;
 `;
 
 const TextArea = styled.textarea`
@@ -672,7 +643,7 @@ const CategoryChip = styled.button`
   align-items: center;
   gap: 6px;
   padding: 10px 14px;
-  border-radius: 10px;
+  border-radius: 50px;
   border: 1px solid ${({ $selected, theme }) => $selected ? theme.primary : theme.border};
   background: ${({ $selected, theme }) => $selected ? theme.hover : theme.card};
   color: ${({ $selected, theme }) => $selected ? theme.primary : theme.text};
@@ -683,7 +654,7 @@ const CategoryChip = styled.button`
 
 const Chip = styled.button`
   padding: 8px 12px;
-  border-radius: 8px;
+  border-radius: 50px;
   border: 1px solid ${({ $selected, theme }) => $selected ? theme.primary : theme.border};
   background: ${({ $selected, theme }) => $selected ? theme.hover : theme.card};
   color: ${({ $selected, theme }) => $selected ? theme.primary : theme.text};
@@ -699,7 +670,7 @@ const DayGrid = styled.div`
 const DayChip = styled.button`
   flex: 1;
   padding: 12px 8px;
-  border-radius: 10px;
+  border-radius: 50px;
   border: 1px solid ${({ $selected, theme }) => $selected ? theme.primary : theme.border};
   background: ${({ $selected, theme }) => $selected ? theme.hover : theme.card};
   color: ${({ $selected, theme }) => $selected ? theme.primary : theme.text};

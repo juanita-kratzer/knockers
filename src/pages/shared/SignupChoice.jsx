@@ -15,9 +15,7 @@ export default function SignupChoice() {
     <Container>
       <Header>
         <BackButton to="/login">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M19 12H5M12 19l-7-7 7-7" />
-          </svg>
+          Back
         </BackButton>
       </Header>
 
@@ -82,17 +80,17 @@ const Header = styled.header`
 `;
 
 const BackButton = styled(Link)`
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  color: ${({ theme }) => theme.text};
-  
-  &:active {
-    background: ${({ theme }) => theme.hoverDark};
-  }
+  padding: 0.4rem 1.1rem;
+  border: 1px solid ${({ theme }) => theme.primary};
+  border-radius: 50px;
+  background: transparent;
+  color: ${({ theme }) => theme.primary};
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-decoration: none;
 `;
 
 const Content = styled.div`

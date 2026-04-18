@@ -35,7 +35,6 @@ export default function PageHeader({
       <HeaderBar>
         {showBack ? (
           <BackButton onClick={handleBack}>
-            <ChevronLeftIcon />
             Back
           </BackButton>
         ) : (
@@ -48,13 +47,6 @@ export default function PageHeader({
     </HeaderContainer>
   );
 }
-
-// Simple chevron icon
-const ChevronLeftIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="15 18 9 12 15 6" />
-  </svg>
-);
 
 const HeaderContainer = styled.div`
   position: sticky;
@@ -76,14 +68,14 @@ const HeaderBar = styled.div`
 const BackButton = styled.button`
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
-  padding: 0.35rem 0.9rem;
+  justify-content: center;
+  padding: 0.4rem 1.1rem;
   border: 1px solid var(--primary);
   border-radius: 50px;
   background: transparent;
   color: var(--primary);
-  font-weight: 500;
-  font-size: 0.8rem;
+  font-weight: 600;
+  font-size: 0.85rem;
   cursor: pointer;
   transition: background 0.15s;
   min-width: 72px;

@@ -78,7 +78,7 @@ export default function AdminEntertainers() {
                   <td>${(balanceCents / 100).toFixed(2)} {balanceCents < 0 && "(owed)"}</td>
                   <td>{strikes}</td>
                   <td>{e.totalRatings ?? 0}</td>
-                  <td>{e.profileType || "soft"}</td>
+                  <td>{e.profileType === "hard" ? "Police Check ✓" : "Standard"}</td>
                   <td>
                     {acting === e.id ? "…" : (
                       <>

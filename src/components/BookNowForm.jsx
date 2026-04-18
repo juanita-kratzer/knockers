@@ -608,7 +608,7 @@ const ToggleButton = styled.button`
   background: ${({ $active, theme }) => ($active ? theme.primary : theme.bgAlt)};
   color: ${({ $active, theme }) => ($active ? "#1a1d21" : theme.text)};
   border: 1px solid ${({ $active, theme }) => ($active ? theme.primary : theme.border)};
-  border-radius: 12px;
+  border-radius: 50px;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
@@ -810,12 +810,12 @@ const Footer = styled.div`
 
 const BackButton = styled.button`
   flex: 1;
-  padding: 16px;
-  background: ${({ theme }) => theme.bgAlt};
-  border: 1px solid ${({ theme }) => theme.border};
-  border-radius: 12px;
-  color: ${({ theme }) => theme.text};
-  font-size: 1rem;
+  padding: 0.5rem 1.2rem;
+  background: transparent;
+  border: 1px solid ${({ theme }) => theme.primary};
+  border-radius: 50px;
+  color: ${({ theme }) => theme.primary};
+  font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
 `;

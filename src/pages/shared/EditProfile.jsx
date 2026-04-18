@@ -166,7 +166,6 @@ export default function EditProfile() {
         phone: formData.phone || "",
         dateOfBirth: formData.dateOfBirth || "",
         photoURL: formData.photoURL || "",
-        profileType: formData.profileType === "hard" ? "hard" : "soft",
         updatedAt: serverTimestamp(),
       });
 
@@ -311,19 +310,6 @@ export default function EditProfile() {
           />
         </Field>
 
-        <Field>
-          <Label>Profile type</Label>
-          <ProfileTypeHint>Soft = ID only; Hard = police check verified.</ProfileTypeHint>
-          <Select
-            name="profileType"
-            value={formData.profileType}
-            onChange={handleChange}
-          >
-            <option value="soft">Soft (ID only)</option>
-            <option value="hard">Hard (Police check)</option>
-          </Select>
-        </Field>
-
         <ChangePasswordLink to="/settings/password">
           Change password
         </ChangePasswordLink>
@@ -339,14 +325,15 @@ const Container = styled.div`
 `;
 
 const SaveBtn = styled.button`
-  padding: 8px 16px;
+  padding: 0.4rem 1.1rem;
   background: ${({ theme }) => theme.primary};
   color: #1a1d21;
   border: none;
-  border-radius: 10px;
+  border-radius: 50px;
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: 0.85rem;
   cursor: pointer;
+  min-width: 72px;
   &:disabled {
     opacity: 0.7;
     cursor: not-allowed;
@@ -484,22 +471,6 @@ const FieldHint = styled.p`
   margin: 6px 0 0;
   font-size: 0.8rem;
   color: ${({ theme }) => theme.muted};
-`;
-
-const ProfileTypeHint = styled.p`
-  margin: 0 0 8px 0;
-  font-size: 0.8rem;
-  color: ${({ theme }) => theme.muted};
-`;
-
-const Select = styled.select`
-  width: 100%;
-  padding: 14px 16px;
-  background: ${({ theme }) => theme.card};
-  border: 1px solid ${({ theme }) => theme.border};
-  border-radius: 12px;
-  color: ${({ theme }) => theme.text};
-  font-size: 1rem;
 `;
 
 const ChangePasswordLink = styled(Link)`

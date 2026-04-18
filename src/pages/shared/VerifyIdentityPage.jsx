@@ -20,7 +20,6 @@ import {
   AlertCircle,
   Camera,
   ChevronRight,
-  ChevronLeft,
   Award,
   CheckCircle,
   Clock,
@@ -190,7 +189,7 @@ export default function VerifyIdentityPage() {
                   </label>
                 </UploadZone>
                 <StepActions>
-                  <BackStepButton onClick={() => setStep(1)}><ChevronLeft size={18} /> Back</BackStepButton>
+                  <BackStepButton onClick={() => setStep(1)}>Back</BackStepButton>
                   <NextButton onClick={() => setStep(needsBack ? 3 : 4)} disabled={!canProceedStep2}>
                     Next <ChevronRight size={18} />
                   </NextButton>
@@ -209,7 +208,7 @@ export default function VerifyIdentityPage() {
                   </label>
                 </UploadZone>
                 <StepActions>
-                  <BackStepButton onClick={() => setStep(2)}><ChevronLeft size={18} /> Back</BackStepButton>
+                  <BackStepButton onClick={() => setStep(2)}>Back</BackStepButton>
                   <NextButton onClick={() => setStep(4)} disabled={!canProceedStep3}>
                     Next <ChevronRight size={18} />
                   </NextButton>
@@ -229,7 +228,7 @@ export default function VerifyIdentityPage() {
                   </label>
                 </UploadZone>
                 <StepActions>
-                  <BackStepButton onClick={() => setStep(needsBack ? 3 : 2)}><ChevronLeft size={18} /> Back</BackStepButton>
+                  <BackStepButton onClick={() => setStep(needsBack ? 3 : 2)}>Back</BackStepButton>
                   <SubmitButton onClick={submitBasicId} disabled={loading || !canProceedStep4}>
                     {loading ? <><LoadingSpinner size={20} /> Submitting…</> : <>Submit verification</>}
                   </SubmitButton>
@@ -266,7 +265,7 @@ export default function VerifyIdentityPage() {
               {hardVerified ? <Award size={22} /> : policeCheckStatus === "pending_review" ? <Clock size={22} /> : <Award size={22} />}
             </StatusIconWrap>
             <StatusInfo>
-              <StatusTitle>Hard Verified</StatusTitle>
+              <StatusTitle>Police Check Verified</StatusTitle>
               <StatusDesc>
                 {hardVerified
                   ? "Police check on file — higher trust & visibility"
@@ -283,14 +282,14 @@ export default function VerifyIdentityPage() {
         {/* Police check upload — show if not yet hard verified and not pending */}
         {!hardVerified && policeCheckStatus !== "pending_review" && (
           <UpgradeSection>
-            <SectionLabel>Upgrade to Hard Verified</SectionLabel>
+            <SectionLabel>Get Police Check Verified</SectionLabel>
             <Card>
               <UpgradeTitle>How it works</UpgradeTitle>
               <StepsList>
                 <StepsItem><StepNum>1</StepNum><span>Purchase a national police check from an accredited provider (approx. $30–$50)</span></StepsItem>
                 <StepsItem><StepNum>2</StepNum><span>Once you receive your results, upload the document here</span></StepsItem>
                 <StepsItem><StepNum>3</StepNum><span>Our team will review it — usually within 24–48 hours</span></StepsItem>
-                <StepsItem><StepNum>4</StepNum><span>Once approved, your profile upgrades to Hard Verified</span></StepsItem>
+                <StepsItem><StepNum>4</StepNum><span>Once approved, your profile earns the Police Check Verified badge</span></StepsItem>
               </StepsList>
 
               <ProviderLink href="https://www.nationalcrimecheck.com.au" target="_blank" rel="noopener noreferrer">
@@ -371,7 +370,7 @@ export default function VerifyIdentityPage() {
           <FeeSection>
             <Card>
               <FeeText>
-                A one-time $2 verification fee is required to unlock messaging and bookings.
+                A one-time $1.99 verification fee is required to unlock messaging and bookings.
               </FeeText>
               <FeeButton onClick={() => navigate("/settings/verification")}>Pay verification fee</FeeButton>
             </Card>
@@ -502,13 +501,14 @@ const StepActions = styled.div`
 const BackStepButton = styled.button`
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 12px 18px;
+  justify-content: center;
+  padding: 0.5rem 1.2rem;
   background: transparent;
-  color: ${({ theme }) => theme.muted};
-  border: 1px solid ${({ theme }) => theme.border};
-  border-radius: 12px;
-  font-size: 0.95rem;
+  color: ${({ theme }) => theme.primary};
+  border: 1px solid ${({ theme }) => theme.primary};
+  border-radius: 50px;
+  font-size: 0.85rem;
+  font-weight: 600;
   cursor: pointer;
 `;
 

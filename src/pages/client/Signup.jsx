@@ -12,9 +12,7 @@ import {
   Eye,
   EyeOff,
   Shield,
-  FileCheck,
   ChevronRight,
-  ChevronLeft,
   Check,
   AlertTriangle,
   Calendar,
@@ -55,7 +53,6 @@ export default function ClientSignup() {
     // Step 2: Verification
     idType: "",
     idVerified: false,
-    policeCheckOptIn: false,
 
     // Step 3: T&C
     agreeToTerms: false,
@@ -154,9 +151,8 @@ export default function ClientSignup() {
         dateOfBirth: formData.dateOfBirth,
         role: "client",
         idType: formData.idType,
-        idVerified: false, // Will be verified separately
-        policeCheckOptIn: formData.policeCheckOptIn,
-        profileType: formData.policeCheckOptIn ? "hard" : "soft", // soft = ID only, hard = police check
+        idVerified: false,
+        profileType: "soft",
         agreedToTermsAt: new Date(),
         termsVersion: "v1",
         marketingOptIn: formData.marketingOptIn,
@@ -179,7 +175,7 @@ export default function ClientSignup() {
     <Container>
       <Header>
         <BackLink to="/client/login">
-          <ChevronLeft size={24} />
+          Back
         </BackLink>
         <HeaderTitle>Create Account</HeaderTitle>
         <HeaderSpacer />
@@ -401,30 +397,10 @@ export default function ClientSignup() {
             <VerificationNote>
               <Shield size={20} />
               <div>
-                <strong>Soft Profile</strong>
-                <p>ID verification confirms you are 18+ and creates a basic trusted profile.</p>
+                <strong>Identity Verification</strong>
+                <p>ID verification confirms you are 18+ and creates a trusted profile.</p>
               </div>
             </VerificationNote>
-
-            <Divider />
-
-            <PoliceCheckOption>
-              <PoliceCheckInfo>
-                <FileCheck size={24} />
-                <div>
-                  <strong>Police Check (Optional)</strong>
-                  <p>
-                    Upgrade to a "Hard Profile" with a police check for enhanced trust.
-                    This is at your own expense but recommended.
-                  </p>
-                </div>
-              </PoliceCheckInfo>
-              <Checkbox
-                type="checkbox"
-                checked={formData.policeCheckOptIn}
-                onChange={(e) => updateField("policeCheckOptIn", e.target.checked)}
-              />
-            </PoliceCheckOption>
 
             <InfoBox>
               <AlertTriangle size={16} />
@@ -554,9 +530,17 @@ const Header = styled.div`
 `;
 
 const BackLink = styled(Link)`
-  color: ${({ theme }) => theme.text};
-  display: flex;
+  display: inline-flex;
   align-items: center;
+  justify-content: center;
+  padding: 0.4rem 1.1rem;
+  border: 1px solid ${({ theme }) => theme.primary};
+  border-radius: 50px;
+  background: transparent;
+  color: ${({ theme }) => theme.primary};
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-decoration: none;
 `;
 
 const HeaderTitle = styled.h1`
@@ -769,45 +753,6 @@ const VerificationNote = styled.div`
   }
 `;
 
-const Divider = styled.div`
-  height: 1px;
-  background: ${({ theme }) => theme.border};
-`;
-
-const PoliceCheckOption = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 16px;
-  background: ${({ theme }) => theme.card};
-  border: 1px solid ${({ theme }) => theme.border};
-  border-radius: 16px;
-`;
-
-const PoliceCheckInfo = styled.div`
-  display: flex;
-  gap: 14px;
-
-  svg {
-    color: ${({ theme }) => theme.primary};
-    flex-shrink: 0;
-  }
-
-  strong {
-    display: block;
-    color: ${({ theme }) => theme.text};
-    margin-bottom: 4px;
-  }
-
-  p {
-    margin: 0;
-    font-size: 0.85rem;
-    color: ${({ theme }) => theme.muted};
-    line-height: 1.4;
-  }
-`;
-
 const Checkbox = styled.input`
   width: 22px;
   height: 22px;
@@ -885,12 +830,12 @@ const Footer = styled.div`
 
 const BackButton = styled.button`
   flex: 1;
-  padding: 16px;
-  background: ${({ theme }) => theme.bgAlt};
-  border: 1px solid ${({ theme }) => theme.border};
-  border-radius: 12px;
-  color: ${({ theme }) => theme.text};
-  font-size: 1rem;
+  padding: 0.5rem 1.2rem;
+  background: transparent;
+  border: 1px solid ${({ theme }) => theme.primary};
+  border-radius: 50px;
+  color: ${({ theme }) => theme.primary};
+  font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
 `;

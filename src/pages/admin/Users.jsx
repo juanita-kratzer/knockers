@@ -115,7 +115,7 @@ export default function AdminUsers() {
                       <option value="admin">admin</option>
                     </RoleSelect>
                   </td>
-                  <td>{u.profileType || "soft"}</td>
+                  <td>{u.profileType === "hard" ? "Police Check ✓" : "Standard"}</td>
                   <td>{strikes} {strikes >= STRIKES_BAN && "(ban)"} {strikes >= STRIKES_SUSPEND && strikes < STRIKES_BAN && "(suspend)"}</td>
                   <td>
                     {banned && <Badge $danger>Banned</Badge>}

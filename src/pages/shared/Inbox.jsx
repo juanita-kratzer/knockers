@@ -70,7 +70,7 @@ export default function Inbox() {
             : "Book an entertainer and wait for them to accept to start messaging"
           }
           actionText={isEntertainer ? "View Requests" : "Browse Entertainers"}
-          actionTo={isEntertainer ? "/talent" : "/explore"}
+          actionTo={isEntertainer ? "/talent" : "/"}
         />
       ) : (
         <>

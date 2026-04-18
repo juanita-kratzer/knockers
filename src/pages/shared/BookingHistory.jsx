@@ -208,7 +208,7 @@ export default function BookingHistory() {
           <EmptyCard>
             <EmptyText>No bookings yet</EmptyText>
             <EmptySubtext>Find an entertainer for your next event</EmptySubtext>
-            <EmptyButton to="/explore">Browse Entertainers</EmptyButton>
+            <EmptyButton to="/">Browse Entertainers</EmptyButton>
           </EmptyCard>
         ) : (
           <>

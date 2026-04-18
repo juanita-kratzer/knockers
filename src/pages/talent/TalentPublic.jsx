@@ -7,13 +7,14 @@ import styled from "styled-components";
 import { useAuth } from "../../context/AuthContext";
 import { useRole } from "../../context/RoleContext";
 import { useEntertainer, toggleEntertainerActive } from "../../hooks/useEntertainers";
+import { canUsePaidFeatures } from "../../lib/verificationFee";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import ErrorMessage from "../../components/ErrorMessage";
 
 export default function TalentPublic() {
   const { id: entertainerId } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, userData } = useAuth();
   const { ageVerified, verifyAge } = useRole();
   const { entertainer, loading, error } = useEntertainer(entertainerId);
   
@@ -70,8 +71,8 @@ export default function TalentPublic() {
             <AgeVerifyButton onClick={() => verifyAge()}>
               I am 18 or older
             </AgeVerifyButton>
-            <AgeCancelButton to="/explore">
-              Go Back
+            <AgeCancelButton to="/">
+              Back
             </AgeCancelButton>
           </AgeGateButtons>
         </AgeGateCard>
@@ -83,6 +84,10 @@ export default function TalentPublic() {
   const isOwner = user?.uid === entertainerId;
   const handleToggleActive = async () => {
     if (!entertainerId || togglingActive) return;
+    if (!entertainer.isActive && !canUsePaidFeatures(userData, user)) {
+      alert("Pay the $1.99 verification fee before going live. Go to Profile → Verification & Badges.");
+      return;
+    }
     if (!entertainer.isActive && entertainer.stripe?.payoutsEnabled !== true) {
       alert("Connect Stripe to receive payments before going live. Set up payouts in Finances.");
       return;
@@ -123,10 +128,8 @@ export default function TalentPublic() {
           </NoPhoto>
         )}
         
-        <BackButton to="/explore">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M19 12H5M12 19l-7-7 7-7" />
-          </svg>
+        <BackButton type="button" onClick={() => navigate(-1)}>
+          Back
         </BackButton>
         
         {entertainer.isAdultContent && (
@@ -140,6 +143,9 @@ export default function TalentPublic() {
           <ProfileName>{entertainer.displayName}</ProfileName>
           {entertainer.verificationStatus === "verified" && (
             <VerifiedBadge>Verified</VerifiedBadge>
+          )}
+          {entertainer.profileType === "hard" && (
+            <PoliceCheckBadge>Police Check Verified</PoliceCheckBadge>
           )}
         </ProfileHeader>
 
@@ -356,19 +362,19 @@ const Thumbnail = styled.img`
   cursor: pointer;
 `;
 
-const BackButton = styled(Link)`
+const BackButton = styled.button`
   position: absolute;
   top: 16px;
   left: 16px;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.5);
+  padding: 0.4rem 1.1rem;
+  border-radius: 50px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  background: rgba(0, 0, 0, 0.45);
   color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  font-weight: 600;
+  font-size: 0.85rem;
   backdrop-filter: blur(8px);
+  cursor: pointer;
 `;
 
 const AdultBadge = styled.div`
@@ -390,6 +396,7 @@ const ProfileSection = styled.div`
 const ProfileHeader = styled.div`
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 10px;
   margin-bottom: 12px;
 `;
@@ -405,6 +412,15 @@ const VerifiedBadge = styled.span`
   padding: 4px 10px;
   background: rgba(34, 197, 94, 0.15);
   color: #22c55e;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 6px;
+`;
+
+const PoliceCheckBadge = styled.span`
+  padding: 4px 10px;
+  background: rgba(59, 130, 246, 0.15);
+  color: #3b82f6;
   font-size: 0.75rem;
   font-weight: 600;
   border-radius: 6px;
@@ -692,12 +708,13 @@ const AgeVerifyButton = styled.button`
 `;
 
 const AgeCancelButton = styled(Link)`
-  padding: 14px 24px;
+  padding: 0.4rem 1.1rem;
   background: transparent;
-  color: ${({ theme }) => theme.muted};
-  border: 1px solid ${({ theme }) => theme.border};
-  border-radius: 12px;
-  font-size: 1rem;
+  color: ${({ theme }) => theme.primary};
+  border: 1px solid ${({ theme }) => theme.primary};
+  border-radius: 50px;
+  font-size: 0.85rem;
+  font-weight: 600;
   text-decoration: none;
   text-align: center;
 `;

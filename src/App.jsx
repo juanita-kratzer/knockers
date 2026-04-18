@@ -6,6 +6,7 @@ import ScrollToTop from "./components/ScrollToTop";
 import ErrorBoundary from "./components/ErrorBoundary";
 import LoadingSpinner from "./components/LoadingSpinner";
 import { RequireAuth, RequireClient, RequireEntertainer, RequireAdmin, RedirectIfAuth, RedirectIfEntertainer } from "./components/ProtectedRoute";
+import RevenueCatInit from "./components/RevenueCatInit";
 
 // Eagerly loaded pages (needed immediately)
 import Home from "./pages/shared/Home";
@@ -60,7 +61,6 @@ const AcceptBooking = lazy(() => import("./pages/talent/AcceptBooking"));
 const ClientLogin = lazy(() => import("./pages/client/Login"));
 const ClientSignup = lazy(() => import("./pages/client/Signup"));
 const ClientDashboard = lazy(() => import("./pages/client/Dashboard"));
-const ExplorePage = lazy(() => import("./pages/client/ExplorePage"));
 const BookingRequest = lazy(() => import("./pages/client/BookingRequest"));
 const UserPosts = lazy(() => import("./pages/client/UserPosts"));
 const CreateListing = lazy(() => import("./pages/client/CreateListing"));
@@ -106,6 +106,7 @@ export default function App() {
   return (
     <ErrorBoundary>
       <ScrollToTop />
+      <RevenueCatInit />
       <Suspense fallback={<PageLoader />}>
         <Routes>
           <Route element={<Layout />}>
@@ -120,9 +121,7 @@ export default function App() {
             <Route path="/" element={
               <RequireAuth><Home /></RequireAuth>
             } />
-            <Route path="/explore" element={
-              <RequireAuth><ExplorePage /></RequireAuth>
-            } />
+            <Route path="/explore" element={<Navigate to="/" replace />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Navigate to="/help" replace />} />
             <Route path="/terms" element={<Terms />} />

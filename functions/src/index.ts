@@ -7,9 +7,10 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
-import { COL, VERIFICATION_FEE_CENTS, IAP_PRODUCT_ID_VERIFICATION, getAppleIAPSharedSecret } from "./lib/config";
+import { COL, VERIFICATION_FEE_CENTS, IAP_PRODUCT_ID_VERIFICATION, getAppleIAPSharedSecret, getRevenueCatSecretKey } from "./lib/config";
 import { getStripe } from "./lib/config";
 import { verifyAppleReceipt } from "./iap/apple";
+import { checkRevenueCatEntitlement } from "./iap/revenueCat";
 import { requireAdmin, writeAdminLog } from "./lib/admin";
 import { createConnectAccount, getConnectOnboardingLink } from "./stripe/connect";
 import { createDepositPaymentIntent } from "./stripe/deposit";
@@ -596,6 +597,55 @@ export const verifyIAPReceiptCallable = functions.region("australia-southeast1")
       referenceId: result.transactionId ?? "unknown",
       createdAt: now,
     });
+    return { ok: true };
+  }
+);
+
+// ---------- Phase 6: RevenueCat entitlement confirmation ----------
+
+/** Callable: confirm verification fee purchase via RevenueCat entitlement check. */
+export const confirmVerificationPurchaseCallable = functions.region("australia-southeast1").https.onCall(
+  async (_data: unknown, context) => {
+    if (!context.auth) throw new functions.https.HttpsError("unauthenticated", "Must be signed in");
+    const uid = context.auth.uid;
+
+    const secretKey = getRevenueCatSecretKey();
+    const result = await checkRevenueCatEntitlement(uid, secretKey);
+
+    if (!result.entitled) {
+      throw new functions.https.HttpsError(
+        "failed-precondition",
+        result.error || "Knockers Pro entitlement not found"
+      );
+    }
+
+    const db = getFirestore();
+    const userRef = db.collection(COL.users).doc(uid);
+    const userSnap = await userRef.get();
+    if (!userSnap.exists) throw new functions.https.HttpsError("not-found", "User not found");
+
+    if (userSnap.data()?.verificationFeePaid === true) {
+      return { ok: true, alreadyPaid: true };
+    }
+
+    const now = FieldValue.serverTimestamp();
+    await userRef.update({
+      verificationFeePaid: true,
+      verifiedAt: now,
+      verificationProvider: "revenuecat",
+      updatedAt: now,
+    });
+
+    await db.collection(COL.fees).add({
+      type: "signup_iap",
+      userId: uid,
+      bookingId: null,
+      amountCents: VERIFICATION_FEE_CENTS,
+      provider: "revenuecat",
+      referenceId: `rc_${uid}`,
+      createdAt: now,
+    });
+
     return { ok: true };
   }
 );

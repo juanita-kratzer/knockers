@@ -1,5 +1,5 @@
 // src/pages/shared/Profile.jsx
-// Profile: stats, edit profile, soft/hard profile, switch dashboard, become entertainer
+// Profile: stats, edit profile, police check badge, switch dashboard, become entertainer
 
 import { useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -122,9 +122,11 @@ export default function Profile() {
           {userData?.username && <UsernameText>@{userData.username}</UsernameText>}
           {user.email && <InfoLine>{user.email}</InfoLine>}
           {userData?.dateOfBirth && (() => { const age = calculateAge(userData.dateOfBirth); return age !== null ? <InfoLine>Age: {age}</InfoLine> : null; })()}
-          <ProfileTypeBadge $hard={isHardProfile}>
-            {isHardProfile ? "Hard Profile" : "Soft Profile"}
-          </ProfileTypeBadge>
+          {isHardProfile && (
+            <ProfileTypeBadge $hard>
+              <ShieldCheck size={12} /> Police Check Verified
+            </ProfileTypeBadge>
+          )}
           <RoleBadge $role={role}>
             {isEntertainer ? <><Theater size={12} /> Entertainer</> : isClient ? <><User size={12} /> Client</> : "User"}
           </RoleBadge>
@@ -150,7 +152,7 @@ export default function Profile() {
       )}
 
       {/* View my public profile (entertainer) — what clients see on map / explore */}
-      {(entertainer || isEntertainer) && user?.uid && (
+      {isEntertainer && user?.uid && (
         <ActionsSection>
           <PublicProfileButton to={`/talent/${user.uid}`}>
             <Theater size={18} />
@@ -215,7 +217,7 @@ export default function Profile() {
             <MenuIcon><ShieldCheck size={20} /></MenuIcon>
             <MenuLabel>
               <MenuTitle>Verification & Badges</MenuTitle>
-              <MenuDesc>{isHardProfile ? "Fully verified" : "Upgrade your profile"}</MenuDesc>
+              <MenuDesc>{isHardProfile ? "Police check verified" : "Verify your police check"}</MenuDesc>
             </MenuLabel>
             <ChevronRight size={20} />
           </MenuItem>
@@ -421,14 +423,16 @@ const InfoLine = styled.p`
 `;
 
 const ProfileTypeBadge = styled.span`
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   padding: 3px 10px;
   margin-top: 6px;
   font-size: 0.75rem;
   font-weight: 600;
   border-radius: 20px;
-  background: ${({ $hard, theme }) => $hard ? "rgba(34, 197, 94, 0.15)" : theme.bgAlt};
-  color: ${({ $hard, theme }) => $hard ? "#22c55e" : theme.muted};
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
 `;
 
 const RoleBadge = styled.span`
@@ -633,7 +637,7 @@ const SwitchButton = styled(Link)`
   padding: 12px 24px;
   background: ${({ theme }) => theme.primary};
   color: #1a1d21;
-  border-radius: 10px;
+  border-radius: 50px;
   font-weight: 600;
   text-decoration: none;
 `;
@@ -646,7 +650,7 @@ const SwitchDashboardButton = styled.button`
   background: ${({ theme }) => theme.primary};
   color: #1a1d21;
   border: none;
-  border-radius: 10px;
+  border-radius: 50px;
   font-weight: 600;
   font-size: 0.95rem;
   cursor: pointer;

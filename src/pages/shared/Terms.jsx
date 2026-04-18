@@ -39,10 +39,10 @@ export default function Terms() {
 
           <SubTitle>2.2 Account Types</SubTitle>
           <Paragraph>
-            <strong>Soft Profile:</strong> ID verified, confirms you are 18+
+            <strong>Standard Profile:</strong> ID verified, confirms you are 18+
           </Paragraph>
           <Paragraph>
-            <strong>Hard Profile:</strong> ID verified plus police check (recommended)
+            <strong>Police Check Verified:</strong> ID verified plus police check — displays a verified badge on your profile (recommended)
           </Paragraph>
         </Section>
 

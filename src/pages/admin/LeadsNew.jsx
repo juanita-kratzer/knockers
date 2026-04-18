@@ -42,7 +42,7 @@ export default function LeadsNew() {
   return (
     <Container>
       <Header>
-        <BackLink to="/admin/leads">← Leads</BackLink>
+        <BackLink to="/admin/leads">Back</BackLink>
         <Title>New lead</Title>
       </Header>
 
@@ -92,7 +92,7 @@ export default function LeadsNew() {
             {saving ? <LoadingSpinner size={20} /> : "Save lead"}
           </SubmitButton>
           <Link to="/admin/leads">
-            <CancelButton type="button">Back to list</CancelButton>
+            <CancelButton type="button">Back</CancelButton>
           </Link>
         </Actions>
       </Form>
@@ -111,12 +111,18 @@ const Header = styled.div`
 `;
 
 const BackLink = styled(Link)`
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.35rem 1rem;
   margin-bottom: 8px;
-  font-size: 0.9rem;
-  color: ${({ theme }) => theme.muted};
+  border: 1px solid ${({ theme }) => theme.primary};
+  border-radius: 50px;
+  background: transparent;
+  color: ${({ theme }) => theme.primary};
+  font-weight: 600;
+  font-size: 0.8rem;
   text-decoration: none;
-  &:hover { color: ${({ theme }) => theme.text}; }
 `;
 
 const Title = styled.h1`
@@ -186,15 +192,15 @@ const Actions = styled.div`
 `;
 
 const SubmitButton = styled.button`
-  padding: 16px;
+  padding: 0.5rem 1.2rem;
   border: none;
-  border-radius: 12px;
+  border-radius: 50px;
   background: ${({ theme }) => theme.primary};
   color: #1a1d21;
-  font-size: 1rem;
+  font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
@@ -202,12 +208,13 @@ const SubmitButton = styled.button`
 `;
 
 const CancelButton = styled.button`
-  padding: 14px;
-  border: 1px solid ${({ theme }) => theme.border};
-  border-radius: 12px;
+  padding: 0.5rem 1.2rem;
+  border: 1px solid ${({ theme }) => theme.primary};
+  border-radius: 50px;
   background: transparent;
-  color: ${({ theme }) => theme.text};
-  font-size: 0.95rem;
+  color: ${({ theme }) => theme.primary};
+  font-size: 0.85rem;
+  font-weight: 600;
   cursor: pointer;
   width: 100%;
 `;

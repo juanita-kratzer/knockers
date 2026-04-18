@@ -1,15 +1,29 @@
 PODS:
-  - Capacitor (7.4.4):
+  - Capacitor (7.6.2):
     - CapacitorCordova
-  - CapacitorApp (7.1.1):
+  - CapacitorApp (7.1.2):
     - Capacitor
-  - CapacitorCordova (7.4.4)
-  - CapacitorHaptics (7.0.3):
+  - CapacitorCordova (7.6.2)
+  - CapacitorHaptics (7.0.5):
     - Capacitor
-  - CapacitorKeyboard (7.0.4):
+  - CapacitorKeyboard (7.0.6):
     - Capacitor
-  - CapacitorStatusBar (7.0.4):
+  - CapacitorStatusBar (7.0.6):
     - Capacitor
+  - PurchasesHybridCommon (17.25.0):
+    - RevenueCat (= 5.51.1)
+  - PurchasesHybridCommonUI (17.25.0):
+    - PurchasesHybridCommon (= 17.25.0)
+    - RevenueCatUI (= 5.51.1)
+  - RevenueCat (5.51.1)
+  - RevenuecatPurchasesCapacitor (11.3.2):
+    - Capacitor
+    - PurchasesHybridCommon (= 17.25.0)
+  - RevenuecatPurchasesCapacitorUi (11.3.2):
+    - Capacitor
+    - PurchasesHybridCommonUI (= 17.25.0)
+  - RevenueCatUI (5.51.1):
+    - RevenueCat (= 5.51.1)
 
 DEPENDENCIES:
   - "Capacitor (from `../../node_modules/@capacitor/ios`)"
@@ -18,6 +32,15 @@ DEPENDENCIES:
   - "CapacitorHaptics (from `../../node_modules/@capacitor/haptics`)"
   - "CapacitorKeyboard (from `../../node_modules/@capacitor/keyboard`)"
   - "CapacitorStatusBar (from `../../node_modules/@capacitor/status-bar`)"
+  - "RevenuecatPurchasesCapacitor (from `../../node_modules/@revenuecat/purchases-capacitor`)"
+  - "RevenuecatPurchasesCapacitorUi (from `../../node_modules/@revenuecat/purchases-capacitor-ui`)"
+
+SPEC REPOS:
+  trunk:
+    - PurchasesHybridCommon
+    - PurchasesHybridCommonUI
+    - RevenueCat
+    - RevenueCatUI
 
 EXTERNAL SOURCES:
   Capacitor:
@@ -32,15 +55,25 @@ EXTERNAL SOURCES:
     :path: "../../node_modules/@capacitor/keyboard"
   CapacitorStatusBar:
     :path: "../../node_modules/@capacitor/status-bar"
+  RevenuecatPurchasesCapacitor:
+    :path: "../../node_modules/@revenuecat/purchases-capacitor"
+  RevenuecatPurchasesCapacitorUi:
+    :path: "../../node_modules/@revenuecat/purchases-capacitor-ui"
 
 SPEC CHECKSUMS:
-  Capacitor: 358dd1c3fdd71d969547b17e159fd8a7736cb45f
-  CapacitorApp: 63b237168fc869e758481dba283315a85743ee78
-  CapacitorCordova: bf648a636f3c153f652d312ae145fb508b6ffced
-  CapacitorHaptics: ce15be8f287fa2c61c7d2d9e958885b90cf0bebc
-  CapacitorKeyboard: 5660c760113bfa48962817a785879373cf5339c3
-  CapacitorStatusBar: d0e0151c89c001a9c7125bac59ddedf76b664768
+  Capacitor: 5d4e6523047feb0e4755e5e922ded0372c2dde24
+  CapacitorApp: f01a913211780e0718dae9750442c3e23f96e106
+  CapacitorCordova: 8214697bed435f6e7c5e3ed86d1632a8c42f7d77
+  CapacitorHaptics: 1b145fa83c622e5383a3bac04ea81e2514f0b0f5
+  CapacitorKeyboard: a2e0869edd229490ce36aed2549c0d6b95e27ee8
+  CapacitorStatusBar: 416e9e53fd6397e668d4a181cd2131617d949bd6
+  PurchasesHybridCommon: 6a79a873ab52f777bfa36e9516f3fcd84d3b3428
+  PurchasesHybridCommonUI: 3c1f78addfb3f470713548b4eac8c59254d0efe6
+  RevenueCat: eab035bbab271faccfef5c36eaff2a1ffef14dc0
+  RevenuecatPurchasesCapacitor: fa376932f9967c7ab4b5eac477e824d90393b91a
+  RevenuecatPurchasesCapacitorUi: 969baeb81228e051e2b9e3e764f86f577e73a4b9
+  RevenueCatUI: c6acb3648fa58ccb4f0f178556ed0278b796234f
 
-PODFILE CHECKSUM: 72a837216d637c9138e5e146d82ac1958947b7ee
+PODFILE CHECKSUM: a06a38b70fe2537f6724279dc5922eb8424f1c25
 
 COCOAPODS: 1.16.2

@@ -232,8 +232,8 @@ export default function AdminLeads() {
                         rows={2}
                         style={{ width: "100%", fontSize: "0.85rem" }}
                       />
-                      <button type="button" onClick={() => handleSaveNotes(l.id)} disabled={acting === l.id}>Save</button>
-                      <button type="button" onClick={() => { setEditingNotes(null); setNotesValue(""); }}>Cancel</button>
+                      <button type="button" onClick={() => handleSaveNotes(l.id)} disabled={acting === l.id} style={{ padding: "0.35rem 1rem", borderRadius: 50, border: "none", background: "var(--primary, #87ceeb)", color: "#1a1d21", fontWeight: 600, fontSize: "0.8rem", cursor: "pointer" }}>Save</button>
+                      <button type="button" onClick={() => { setEditingNotes(null); setNotesValue(""); }} style={{ padding: "0.35rem 1rem", borderRadius: 50, border: "1px solid var(--primary, #87ceeb)", background: "transparent", color: "var(--primary, #87ceeb)", fontWeight: 600, fontSize: "0.8rem", cursor: "pointer" }}>Cancel</button>
                     </div>
                   ) : (
                     <button

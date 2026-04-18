@@ -4,12 +4,12 @@
 
 /**
  * Fee constants (Phase 6 — Apple-compliant monetisation).
- * signupVerification: $2 AUD via Apple IAP (non-consumable).
+ * signupVerification: $1.99 AUD via Apple IAP (non-consumable).
  * bookingPlatform: $30 AUD via Stripe on each booking deposit.
  */
 export const FEES = {
   /** Signup/verification fee in cents — Apple IAP only */
-  signupVerification: 200,
+  signupVerification: 199,
   /** Booking platform fee in cents — Stripe */
   bookingPlatform: 3000,
 };

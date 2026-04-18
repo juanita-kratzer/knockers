@@ -63,7 +63,7 @@ export default function Help() {
             setShowForm(false);
             setFormData({ topic: "", message: "" });
           }}>
-            Back to Help Centre
+            Back
           </SuccessButton>
         </SuccessContent>
       </PageContainer>
@@ -233,6 +233,12 @@ const SuccessIcon = styled.div`color: #22c55e; margin-bottom: 24px;`;
 const SuccessTitle = styled.h2`margin: 0 0 12px; font-size: 1.5rem; font-weight: 700; color: ${({ theme }) => theme.text};`;
 const SuccessText = styled.p`margin: 0 0 32px; color: ${({ theme }) => theme.muted}; font-size: 1rem; line-height: 1.6; max-width: 300px;`;
 const SuccessButton = styled.button`
-  padding: 14px 28px; background: ${({ theme }) => theme.primary}; border: none; border-radius: 12px;
-  color: #1a1d21; font-size: 1rem; font-weight: 700; cursor: pointer;
+  padding: 0.5rem 1.2rem;
+  border: 1px solid ${({ theme }) => theme.primary};
+  border-radius: 50px;
+  background: transparent;
+  color: ${({ theme }) => theme.primary};
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
 `;

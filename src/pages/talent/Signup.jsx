@@ -13,7 +13,6 @@ import {
   EyeOff,
   Shield,
   ChevronRight,
-  ChevronLeft,
   Check,
   AlertTriangle,
   Theater,
@@ -50,6 +49,7 @@ export default function TalentSignup() {
   const [error, setError] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
   const isAddingToExistingAccount = !!user;
+  const hasExistingIdType = isAddingToExistingAccount && !!userData?.idType;
 
   const [formData, setFormData] = useState({
     // Step 1: Basic Info
@@ -75,7 +75,6 @@ export default function TalentSignup() {
     earnsOver75k: null,
     abn: "",
     blockContacts: false,
-    policeCheckOptIn: false,
 
     // Step 4: T&C
     agreeToTerms: false,
@@ -151,7 +150,7 @@ export default function TalentSignup() {
     }
 
     if (stepNum === 3) {
-      if (!formData.idType) errors.idType = "Please select an ID type";
+      if (!hasExistingIdType && !formData.idType) errors.idType = "Please select an ID type";
       if (!formData.workRights) errors.workRights = "Work rights selection is required";
       if (formData.earnsOver75k === null) errors.earnsOver75k = "Please select an option";
       if (formData.earnsOver75k && !formData.abn.trim()) {
@@ -191,7 +190,7 @@ export default function TalentSignup() {
     location: formData.locationData ?? undefined,
     categories: formData.entertainerTypes || [],
     isAdultContent: false,
-    profileType: formData.policeCheckOptIn ? "hard" : "soft",
+    profileType: "soft",
     idType: formData.idType,
     workRights: formData.workRights,
     earnsOver75k: formData.earnsOver75k || false,
@@ -220,7 +219,7 @@ export default function TalentSignup() {
           dateOfBirth: formData.dateOfBirth,
           phone: formData.phone,
           role: "entertainer",
-          profileType: formData.policeCheckOptIn ? "hard" : "soft",
+          profileType: "soft",
           entertainerTypes: formData.entertainerTypes,
           bio: formData.bio,
           locationData: formData.locationData,
@@ -253,7 +252,7 @@ export default function TalentSignup() {
     <Container>
       <Header>
         <BackLink to={isAddingToExistingAccount ? "/settings" : "/talent/login"}>
-          <ChevronLeft size={24} />
+          Back
         </BackLink>
         <HeaderTitle>Join as Entertainer</HeaderTitle>
         <HeaderSpacer />
@@ -538,22 +537,24 @@ export default function TalentSignup() {
               Required to ensure you are who you say you are and can legally work.
             </StepDescription>
 
-            <FormGroup>
-              <Label>ID Type</Label>
-              <Select
-                value={formData.idType}
-                onChange={(e) => updateField("idType", e.target.value)}
-                $error={fieldErrors.idType}
-              >
-                <option value="">Select ID type...</option>
-                {ID_TYPES.map((type) => (
-                  <option key={type} value={type}>
-                    {type}
-                  </option>
-                ))}
-              </Select>
-              {fieldErrors.idType && <ErrorText>{fieldErrors.idType}</ErrorText>}
-            </FormGroup>
+            {!hasExistingIdType && (
+              <FormGroup>
+                <Label>ID Type</Label>
+                <Select
+                  value={formData.idType}
+                  onChange={(e) => updateField("idType", e.target.value)}
+                  $error={fieldErrors.idType}
+                >
+                  <option value="">Select ID type...</option>
+                  {ID_TYPES.map((type) => (
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
+                  ))}
+                </Select>
+                {fieldErrors.idType && <ErrorText>{fieldErrors.idType}</ErrorText>}
+              </FormGroup>
+            )}
 
             <FormGroup>
               <Label>Work Rights in Australia</Label>
@@ -642,18 +643,6 @@ export default function TalentSignup() {
                 onChange={(e) => updateField("blockContacts", e.target.checked)}
               />
             </PrivacyOption>
-
-            <PoliceCheckOption style={{ marginTop: "16px" }}>
-              <Checkbox
-                type="checkbox"
-                id="talent-police-check"
-                checked={formData.policeCheckOptIn}
-                onChange={(e) => updateField("policeCheckOptIn", e.target.checked)}
-              />
-              <label htmlFor="talent-police-check">
-                <strong>Hard profile:</strong> I have (or will complete) a police check. Soft = ID only; Hard = police check verified.
-              </label>
-            </PoliceCheckOption>
 
             <InfoBox>
               <Shield size={16} />
@@ -796,9 +785,17 @@ const Header = styled.div`
 `;
 
 const BackLink = styled(Link)`
-  color: ${({ theme }) => theme.text};
-  display: flex;
+  display: inline-flex;
   align-items: center;
+  justify-content: center;
+  padding: 0.4rem 1.1rem;
+  border: 1px solid ${({ theme }) => theme.primary};
+  border-radius: 50px;
+  background: transparent;
+  color: ${({ theme }) => theme.primary};
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-decoration: none;
 `;
 
 const HeaderTitle = styled.h1`
@@ -1019,7 +1016,7 @@ const TypeCard = styled.button`
     $selected ? `${theme.primary}15` : theme.bgAlt};
   border: 2px solid ${({ $selected, theme }) =>
     $selected ? theme.primary : theme.border};
-  border-radius: 12px;
+  border-radius: 50px;
   text-align: left;
   cursor: pointer;
   position: relative;
@@ -1060,7 +1057,7 @@ const RadioOption = styled.button`
     $selected ? `${theme.primary}15` : theme.bgAlt};
   border: 2px solid ${({ $selected, theme }) =>
     $selected ? theme.primary : theme.border};
-  border-radius: 12px;
+  border-radius: 50px;
   color: ${({ $selected, theme }) => ($selected ? theme.primary : theme.text)};
   font-size: 1rem;
   font-weight: 600;
@@ -1111,23 +1108,6 @@ const Checkbox = styled.input`
   height: 22px;
   accent-color: ${({ theme }) => theme.primary};
   flex-shrink: 0;
-`;
-
-const PoliceCheckOption = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 16px;
-  background: ${({ theme }) => theme.card};
-  border: 1px solid ${({ theme }) => theme.border};
-  border-radius: 16px;
-
-  label {
-    font-size: 0.9rem;
-    color: ${({ theme }) => theme.text};
-    line-height: 1.4;
-    cursor: pointer;
-  }
 `;
 
 const InfoBox = styled.div`
@@ -1200,12 +1180,12 @@ const Footer = styled.div`
 
 const BackButton = styled.button`
   flex: 1;
-  padding: 16px;
-  background: ${({ theme }) => theme.bgAlt};
-  border: 1px solid ${({ theme }) => theme.border};
-  border-radius: 12px;
-  color: ${({ theme }) => theme.text};
-  font-size: 1rem;
+  padding: 0.5rem 1.2rem;
+  background: transparent;
+  border: 1px solid ${({ theme }) => theme.primary};
+  border-radius: 50px;
+  color: ${({ theme }) => theme.primary};
+  font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
 `;

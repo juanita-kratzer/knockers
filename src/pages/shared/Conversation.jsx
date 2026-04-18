@@ -12,6 +12,8 @@ import { useEntertainer } from "../../hooks/useEntertainers";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import ErrorMessage from "../../components/ErrorMessage";
 import SafetyButton from "../../components/SafetyButton";
+import VerificationModal from "../../components/VerificationModal";
+import useVerificationGate from "../../hooks/useVerificationGate";
 import { logger } from "../../lib/logger";
 
 export default function Conversation() {
@@ -24,6 +26,7 @@ export default function Conversation() {
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
   const messagesEndRef = useRef(null);
+  const { isPaid, showModal: showVerifModal, requireVerification, dismissModal: dismissVerifModal } = useVerificationGate();
 
   // Get the other party's info
   const isEntertainer = booking?.entertainerId === user?.uid;
@@ -39,6 +42,7 @@ export default function Conversation() {
 
   const handleSend = async (e) => {
     e.preventDefault();
+    if (!requireVerification()) return;
     if (!newMessage.trim() || sending || !canMessage) return;
 
     setSending(true);
@@ -138,9 +142,10 @@ export default function Conversation() {
             as="textarea"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
-            placeholder={`Message ${otherName}…`}
-            disabled={sending}
+            placeholder={!isPaid ? "Pay verification fee to message" : `Message ${otherName}…`}
+            disabled={sending || !isPaid}
             rows={1}
+            onClick={() => { if (!isPaid) requireVerification(); }}
           />
           <SendButton type="submit" disabled={!newMessage.trim() || sending}>
             {sending ? (
@@ -153,6 +158,8 @@ export default function Conversation() {
           </SendButton>
         </InputContainer>
       )}
+
+      <VerificationModal show={showVerifModal} onDismiss={dismissVerifModal} />
     </Container>
   );
 }
